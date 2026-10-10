@@ -1,0 +1,169 @@
+---
+interface Props {
+  baseApi: string;
+}
+
+import { SINAL_REGIAO, SINAL_ROTULO } from "../data/sinal";
+
+const { baseApi } = Astro.props;
+---
+
+<aside
+  data-sinal-enso
+  class="flex w-full flex-col gap-3 rounded-panel bg-deep p-4 text-on-dark xl:w-[440px] xl:shrink-0 xl:p-5"
+  aria-label="Leitura do sinal ENSO"
+>
+  <div class="flex items-start gap-2">
+    <span class="mt-1 size-2.5 shrink-0 rounded-full bg-data-warm"></span>
+    <span class="min-w-0 flex-1 text-[14px] font-semibold tracking-widest leading-[1.35]">
+      {SINAL_ROTULO}
+      <span class="block">{SINAL_REGIAO}</span>
+    </span>
+    <span
+      data-sinal-evento
+      class="shrink-0 whitespace-nowrap rounded-full bg-data-warm px-1.5 py-1.5 text-[11px] font-semibold"
+    >
+      Carregando
+    </span>
+  </div>
+
+  <span class="flex items-baseline justify-between gap-3 text-[14px] leading-[1.3] text-on-dark/75">
+    <span data-sinal-subtitulo>Consultando o backend...</span>
+    <span data-sinal-data="temporada" class="shrink-0">—</span>
+  </span>
+
+  <div class="flex flex-col gap-1">
+    <span data-sinal-valor="oni" class="font-data text-[24px] font-bold">—</span>
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <span class="flex items-baseline justify-between gap-3 text-[14px] leading-[1.3] text-on-dark/75">
+      <span>Leitura da última semana</span>
+      <span data-sinal-data="nino34" class="shrink-0">—</span>
+    </span>
+    <span data-sinal-valor="nino34" class="font-data text-[24px] font-bold">—</span>
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <span class="flex items-baseline justify-between gap-3 text-[14px] leading-[1.3] text-on-dark/75">
+      <span data-sinal-rotulo="projecao">Projeção para NDJ</span>
+      <span data-sinal-data="projecao" class="shrink-0">—</span>
+    </span>
+    <span data-sinal-valor="projecao" class="font-data text-[24px] font-bold">—</span>
+  </div>
+
+  <div class="h-px w-full bg-on-dark/15"></div>
+
+  <p data-sinal-procedencia class="m-0 text-[14px] leading-[1.45] text-on-dark/70">
+    Carregando procedência dos dados...
+  </p>
+
+  <p
+    data-sinal-cobertura
+    class="m-0 rounded-inset bg-on-dark/8 px-2.5 py-2.5 text-[14px] leading-[1.4]"
+  >
+    Calculando cobertura...
+  </p>
+
+  <p data-sinal-status role="status" aria-live="polite" class="sr-only"></p>
+</aside>
+
+<script define:vars={{ baseApi }}>
+  const card = document.querySelector("[data-sinal-enso]");
+
+  function definirTexto(seletor, valor) {
+    const elemento = card?.querySelector(seletor);
+    if (elemento) elemento.textContent = String(valor);
+  }
+
+  function formatarNumero(valor) {
+    if (valor === null || valor === undefined || valor === "") return "—";
+    const numero = Number(valor);
+    return Number.isFinite(numero)
+      ? new Intl.NumberFormat("pt-BR", {
+          signDisplay: "always",
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }).format(numero)
+      : "—";
+  }
+
+  function formatarData(valor) {
+    if (!valor) return "—";
+    const data = new Date(`${valor}T00:00:00`);
+    return Number.isNaN(data.getTime())
+      ? valor
+      : new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(data);
+  }
+
+  // Temporadas ENSO são janelas de 3 meses; mostramos o mês central (ex.: JAS → agosto).
+  const MESES_ABREVIADOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  const CENTRO_TEMPORADA = {
+    DJF: 0, JFM: 1, FMA: 2, MAM: 3, AMJ: 4, MJJ: 5,
+    JJA: 6, JAS: 7, ASO: 8, SON: 9, OND: 10, NDJ: 11,
+  };
+
+  function rotuloCentroTemporada(temporada, ano) {
+    const indice = CENTRO_TEMPORADA[String(temporada ?? "").toUpperCase()];
+    if (indice === undefined) return "—";
+    const mes = MESES_ABREVIADOS[indice];
+    return `${mes.charAt(0).toUpperCase()}${mes.slice(1)}/${String(ano ?? "").slice(-2)}`;
+  }
+
+  async function carregarSinal() {
+    if (!card) return;
+
+    const status = card.querySelector("[data-sinal-status]");
+    try {
+      const resposta = await fetch(`${baseApi}/api/enso/sinal`);
+      if (!resposta.ok) throw new Error(`Backend respondeu com HTTP ${resposta.status}.`);
+
+      const dados = await resposta.json();
+      const { oni, projecao, weekly, coverage, frequencia } = dados;
+
+      definirTexto("[data-sinal-evento]", oni.evento ?? "Fase indisponível");
+      definirTexto(
+        "[data-sinal-subtitulo]",
+        `Temporada ${oni.temporada}/${oni.ano} · ${oni.origem ?? "origem não informada"}`,
+      );
+      definirTexto(
+        "[data-sinal-data='temporada']",
+        rotuloCentroTemporada(oni.temporada, oni.ano),
+      );
+      definirTexto("[data-sinal-valor='oni']", `${formatarNumero(oni.nino34_mm3)} °C`);
+      definirTexto("[data-sinal-data='nino34']", formatarData(weekly.observation_date));
+      definirTexto("[data-sinal-valor='nino34']", `${formatarNumero(weekly.nino34)} °C`);
+      definirTexto("[data-sinal-rotulo='projecao']", `Projeção para ${projecao.temporada}`);
+      definirTexto(
+        "[data-sinal-data='projecao']",
+        rotuloCentroTemporada(projecao.temporada, projecao.ano),
+      );
+      definirTexto("[data-sinal-valor='projecao']", `${formatarNumero(projecao.nino34_mm3)} °C`);
+      definirTexto(
+        "[data-sinal-procedencia]",
+        `Dados semanais: ${formatarData(coverage.first_observation_date)} a ${formatarData(coverage.last_observation_date)} (${coverage.total_weeks} semanas).`,
+      );
+
+      const percentual = Number(frequencia.percentual);
+      const percentualFormatado = Number.isFinite(percentual)
+        ? new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(percentual)
+        : "—";
+      definirTexto(
+        "[data-sinal-cobertura]",
+        `${percentualFormatado}% das semanas com anomalia acima de +0,5 °C na região ${frequencia.regiao}.`,
+      );
+      if (status) status.textContent = "Sinal ENSO carregado do backend.";
+    } catch (erro) {
+      const mensagem = erro instanceof Error ? erro.message : "Não foi possível carregar o sinal ENSO.";
+      definirTexto("[data-sinal-evento]", "Indisponível");
+      definirTexto("[data-sinal-subtitulo]", mensagem);
+      definirTexto("[data-sinal-data='temporada']", "—");
+      definirTexto("[data-sinal-data='projecao']", "—");
+      definirTexto("[data-sinal-procedencia]", "Dados de procedência indisponíveis.");
+      definirTexto("[data-sinal-cobertura]", "Cobertura indisponível.");
+      if (status) status.textContent = mensagem;
+    }
+  }
+
+  carregarSinal();
+</script>

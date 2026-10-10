@@ -1,0 +1,28 @@
+---
+/**
+ * Barra superior do mobile — substitui a Sidebar abaixo de lg.
+ * Medidas do Pen (390px): 76px de altura, padding 16, gap 12, itens centralizados.
+ */
+---
+
+<header
+  class="sticky top-0 z-30 flex h-[76px] items-center gap-3 border-b border-soft bg-bg px-4 lg:hidden"
+>
+  <button
+    type="button"
+    data-menu-abrir
+    aria-controls="nav-principal"
+    aria-expanded="false"
+    aria-label="Abrir menu de navegação"
+    class="grid size-11 shrink-0 place-items-center rounded-lg transition-colors hover:bg-soft"
+  >
+    <span class="flex flex-col gap-[5px]" aria-hidden="true">
+      <span class="block h-0.5 w-5 rounded-[1px] bg-deep"></span>
+      <span class="block h-0.5 w-5 rounded-[1px] bg-deep"></span>
+      <span class="block h-0.5 w-5 rounded-[1px] bg-deep"></span>
+    </span>
+  </button>
+
+  <span class="size-3.5 shrink-0 rounded-full bg-deep" aria-hidden="true"></span>
+  <span class="text-[20px] font-semibold text-deep">ClimaSP</span>
+</header>

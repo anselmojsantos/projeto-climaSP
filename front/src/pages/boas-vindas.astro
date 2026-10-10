@@ -1,0 +1,137 @@
+---
+import Base from "../layouts/Base.astro";
+import ComoFunciona from "../components/ComoFunciona.astro";
+import Fluxo from "../components/Fluxo.astro";
+import FontesDeDados from "../components/FontesDeDados.astro";
+import RegioesNino from "../components/RegioesNino.astro";
+import SinalEnso from "../components/SinalEnso.astro";
+import { SECOES } from "../data/secoes";
+
+const cards = SECOES.filter((secao) => secao.slug !== "boas-vindas");
+
+const baseApi = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3333";
+---
+
+<Base titulo="Boas Vindas">
+  <div class="grid gap-4 xl:grid-cols-[1fr_440px] xl:items-center xl:gap-6">
+    <div>
+      <p
+        class="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-ink-secondary xl:text-[17px]"
+      >
+        Bem-vindo ao ClimaSP. Este é um projeto de estudo de caso do Projeto
+        Integrado IV da Univesp, criado para compreender os fenômenos do El Niño a
+        partir de dados reais e públicos, disponíveis em agências oficiais como a
+        NOAA.
+      </p>
+
+      <p
+        class="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-ink-secondary xl:text-[17px]"
+      >
+        O foco está em investigar a correlação entre os impactos do fenômeno e as
+        diferentes sub-regiões da Região Metropolitana de São Paulo, combinando
+        projeção e técnicas de Machine Learning.
+      </p>
+
+      <div class="mt-5">
+        <Fluxo />
+      </div>
+    </div>
+
+    <SinalEnso baseApi={baseApi} />
+  </div>
+
+  <section class="mt-8 max-w-[62ch]" aria-labelledby="conexao">
+    <h2
+      id="conexao"
+      class="m-0 text-[13px] font-semibold tracking-wide uppercase"
+    >
+      Conexão com o backend
+    </h2>
+
+    <div
+      id="back-status"
+      class="mt-4 rounded-panel border border-soft bg-soft p-5"
+      aria-live="polite"
+    >
+      <p class="m-0 font-data text-[13px] text-ink-secondary">
+        consultando {baseApi}/api/clima
+      </p>
+    </div>
+  </section>
+
+  <FontesDeDados />
+
+  <div class="mt-12">
+    <RegioesNino baseApi={baseApi} />
+  </div>
+
+  <div class="mt-12">
+    <ComoFunciona />
+  </div>
+
+  <section class="mt-12" aria-labelledby="secoes">
+    <h2
+      id="secoes"
+      class="m-0 text-[13px] font-semibold tracking-wide uppercase"
+    >
+      O que você vai encontrar
+    </h2>
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {
+        cards.map(({ slug, titulo, texto }) => (
+          <a
+            href={`/${slug}`}
+            class="block rounded-panel border border-soft bg-soft p-5 no-underline transition-colors hover:border-accent"
+          >
+            <h3 class="m-0 text-[15px] font-semibold text-ink">{titulo}</h3>
+            <p class="mt-2 mb-0 text-[14px] leading-relaxed text-ink-secondary">
+              {texto}
+            </p>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <script define:vars={{ baseApi }}>
+    async function carregarStatus() {
+      const alvo = document.querySelector("#back-status");
+      if (!alvo) return;
+
+      try {
+        const resposta = await fetch(`${baseApi}/api/clima`);
+        if (!resposta.ok) {
+          throw new Error(`Backend respondeu com HTTP ${resposta.status}.`);
+        }
+
+        const dados = await resposta.json();
+        const titulo = document.createElement("p");
+        titulo.className = "m-0 flex items-center gap-2 text-[15px] font-semibold text-ink";
+        const indicador = document.createElement("span");
+        indicador.className = "size-2 rounded-full bg-accent";
+        indicador.setAttribute("aria-hidden", "true");
+        titulo.append(indicador, document.createTextNode(String(dados.status ?? "backend online")));
+
+        const mensagem = document.createElement("p");
+        mensagem.className = "mt-2 mb-0 font-data text-[13px] text-ink-secondary";
+        mensagem.textContent = String(dados.mensagem ?? "API ClimaSP disponível.");
+        alvo.replaceChildren(titulo, mensagem);
+      } catch (erro) {
+        const titulo = document.createElement("p");
+        titulo.className = "m-0 flex items-center gap-2 text-[15px] font-semibold text-data-warm";
+        const indicador = document.createElement("span");
+        indicador.className = "size-2 rounded-full bg-data-warm";
+        indicador.setAttribute("aria-hidden", "true");
+        titulo.append(indicador, document.createTextNode("backend offline"));
+
+        const mensagem = document.createElement("p");
+        mensagem.className = "mt-2 mb-0 font-data text-[13px] text-ink-secondary";
+        mensagem.textContent = erro instanceof Error ? erro.message : "Não foi possível conectar ao backend.";
+        alvo.replaceChildren(titulo, mensagem);
+      }
+    }
+
+    carregarStatus();
+  </script>
+</Base>

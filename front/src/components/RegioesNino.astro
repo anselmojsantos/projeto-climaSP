@@ -1,0 +1,410 @@
+---
+/**
+ * Seção "Onde o NOAA mede o El Niño": as quatro caixas do Pacífico equatorial.
+ *
+ * Tabela real com th[scope] — a leitura por leitor de tela depende disso, e o
+ * Pen trata as células como colunas de dado, não como um grid decorativo.
+ * A linha `guia` (Niño 1+2) sai invertida em azul-marinho.
+ *
+ * Os valores vêm de GET /api/anomalias/regioes (df_anomalias). O mapa (Leaflet
+ * + OpenStreetMap) desenha as caixas das regiões coloridas pela média de
+ * anomalia; o que está renderizado aqui é só o fallback até o backend responder.
+ */
+import "leaflet/dist/leaflet.css";
+import {
+  LEGENDA_REGIOES,
+  MES_MENSAL,
+  REGIOES_NINO,
+} from "../data/regioes";
+
+interface Props {
+  baseApi: string;
+}
+
+const { baseApi } = Astro.props;
+
+const COLUNAS = [
+  { titulo: "Região", largura: "w-[80px]" },
+  { titulo: "Localização", largura: "w-[236px]" },
+  { titulo: "% El Niño", largura: "w-[100px]" },
+  { titulo: "Média anomalia (°C)", largura: "w-[150px]" },
+] as const;
+
+function formatarPercentual(valor: number): string {
+  return `${new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(valor)} %`;
+}
+
+function formatarAnomalia(valor: number): string {
+  return `${new Intl.NumberFormat("pt-BR", {
+    signDisplay: "always",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(valor)} °C`;
+}
+
+const ultima = REGIOES_NINO.length - 1;
+const regioesFallback = JSON.stringify(REGIOES_NINO);
+---
+
+<section
+  aria-labelledby="regioes-nino"
+  data-regioes-nino
+  data-base-api={baseApi}
+  data-regioes={regioesFallback}
+  data-mes-referencia={MES_MENSAL}
+>
+  <h2 id="regioes-nino" class="m-0 text-[20px] leading-[1.2] font-semibold">
+    Onde o NOAA mede o El Niño
+  </h2>
+  <p class="mt-1.5 mb-0 text-[15px] leading-[1.3] text-ink-secondary">
+    As quatro caixas do Pacífico equatorial (regiões Niño) usadas no diagnóstico
+    ENSO — a variável-guia do estudo.
+  </p>
+
+  <div class="mt-5 grid items-start gap-4 xl:grid-cols-[400px_1fr] xl:gap-5">
+    <figure class="m-0 flex flex-col gap-2 rounded-2xl bg-soft p-4">
+      <div
+        data-mapa-regioes
+        class="relative z-0 h-[240px] w-full overflow-hidden rounded-lg border border-soft bg-bg"
+        role="img"
+        aria-label="Mapa das regiões Niño no Pacífico equatorial"
+      ></div>
+      <figcaption class="text-[11px] leading-[1.4] text-data-neutral">
+        {LEGENDA_REGIOES}
+      </figcaption>
+    </figure>
+
+    <div class="overflow-x-auto">
+    <p class="mb-2 mt-0 text-[13px] font-semibold text-ink">
+      Média Geral (07/01/2026 a 09/09/2026)
+    </p>
+    <table
+      class="w-max min-w-full border-separate border-spacing-x-0 border-spacing-y-1.5 text-left"
+    >
+      <thead>
+        <tr>
+        {
+          COLUNAS.map(({ titulo, largura }, i) => (
+            <th
+              scope="col"
+              class:list={[
+                largura,
+                "bg-deep px-2.5 py-2.5 text-[12px] font-semibold text-on-dark",
+                i === 0 && "rounded-tl-[10px]",
+                i === COLUNAS.length - 1 && "rounded-tr-[10px]",
+              ]}
+            >
+              {titulo}
+            </th>
+          ))
+        }
+        </tr>
+      </thead>
+
+      <tbody>
+        {
+          REGIOES_NINO.map(
+            ({ regiao, localizacao, percentualElNino, mediaAnomalia, guia }, indice) => (
+              <tr data-regiao={regiao} class:list={[guia ? "text-on-dark" : "text-ink"]}>
+                <th
+                  scope="row"
+                  class:list={[
+                    COLUNAS[0].largura,
+                    "px-2.5 py-2.5 text-[14px] font-semibold",
+                    guia ? "bg-deep" : indice % 2 === 0 ? "bg-bg" : "bg-soft",
+                    indice === 0 && "rounded-tl-[10px]",
+                    indice === ultima && "rounded-bl-[10px]",
+                  ]}
+                >
+                  {regiao}
+                </th>
+                <td
+                  data-campo="localizacao"
+                  class:list={[
+                    COLUNAS[1].largura,
+                    "px-2.5 py-2.5 text-[14px]",
+                    guia
+                      ? "bg-deep text-on-dark/85"
+                      : indice % 2 === 0
+                        ? "bg-bg text-ink-secondary"
+                        : "bg-soft text-ink-secondary",
+                    indice === ultima && "rounded-bl-[10px]",
+                  ]}
+                >
+                  {localizacao}
+                </td>
+                <td
+                  data-campo="percentual"
+                  class:list={[
+                    COLUNAS[2].largura,
+                    "px-2.5 py-2.5 font-data text-[14px]",
+                    guia ? "bg-deep" : indice % 2 === 0 ? "bg-bg" : "bg-soft",
+                    indice === ultima && "rounded-bl-[10px]",
+                  ]}
+                >
+                  {formatarPercentual(percentualElNino)}
+                </td>
+                <td
+                  data-campo="anomalia"
+                  class:list={[
+                    COLUNAS[3].largura,
+                    "px-2.5 py-2.5 font-data text-[14px] font-bold",
+                    guia ? "bg-deep text-amber" : "text-data-warm",
+                    indice % 2 === 0 ? "bg-bg" : "bg-soft",
+                    indice === ultima && "rounded-br-[10px]",
+                  ]}
+                >
+                  {formatarAnomalia(mediaAnomalia)}
+                </td>
+              </tr>
+            ),
+          )
+        }
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .leaflet-container {
+    background: #e8eef4;
+    font: inherit;
+  }
+
+  .rotulo-mapa {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(13, 27, 42, 0.15);
+    color: #0d1b2a;
+    font-size: 11px;
+    line-height: 1.35;
+    padding: 4px 6px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .rotulo-mapa::before {
+    display: none;
+  }
+
+  .legenda-mapa {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(13, 27, 42, 0.15);
+    color: #0d1b2a;
+    font-size: 11px;
+    line-height: 1.3;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .legenda-mapa .legenda-titulo {
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+
+  .legenda-mapa .legenda-barra {
+    background: linear-gradient(90deg, #0e3a5d, #8a9099, #cb182b);
+    border-radius: 4px;
+    height: 8px;
+    width: 160px;
+  }
+</style>
+
+<script>
+  import * as L from "leaflet";
+
+  interface BoundsRegiao {
+    lat: [number, number];
+    lon: [number, number];
+  }
+
+  interface RegiaoApi {
+    regiao: string;
+    localizacao: string;
+    percentualElNino: number | string;
+    mediaAnomalia: number | string;
+    mediaMensal: number | string | null;
+    guia: boolean;
+    bounds: BoundsRegiao | null;
+  }
+
+  const secao = document.querySelector<HTMLElement>("[data-regioes-nino]");
+  const baseApi = secao?.dataset.baseApi ?? "";
+
+  function chaveRegiao(regiao: string | undefined): string {
+    return String(regiao ?? "").replace(/^★\s*/, "").trim().toLowerCase();
+  }
+
+  function formatarPercentual(valor: number | string): string {
+    const numero = Number(valor);
+    return Number.isFinite(numero)
+      ? `${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(numero)} %`
+      : "—";
+  }
+
+  function formatarAnomalia(valor: number | string | null): string {
+    if (valor === null || valor === undefined || valor === "") return "—";
+    const numero = Number(valor);
+    return Number.isFinite(numero)
+      ? `${new Intl.NumberFormat("pt-BR", { signDisplay: "always", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(numero)} °C`
+      : "—";
+  }
+
+  /** Limiares do status: > +0,5 aquecimento; < -0,5 resfriamento; senão neutro. */
+  function statusDe(valor: number | string | null): string {
+    if (valor === null || valor === undefined || valor === "") return "—";
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return "—";
+    if (numero > 0.5) return "Aquecendo";
+    if (numero < -0.5) return "Resfriando";
+    return "Neutro";
+  }
+
+  /** Cor por status, na mesma régua do rótulo: azul do tema (frio), vermelho (quente), neutro no meio. */
+  function corStatus(valor: number | string | null): string {
+    const numero = Number(valor);
+    if (Number.isFinite(numero)) {
+      if (numero > 0.5) return "#cb182b";
+      if (numero < -0.5) return "#0e3a5d";
+    }
+    return "#8a9099";
+  }
+
+  function atualizarTabela(regioes: RegiaoApi[]): void {
+    const corpo = secao?.querySelector("tbody");
+    if (!corpo) return;
+
+    const porRegiao = new Map(regioes.map((r) => [chaveRegiao(r.regiao), r]));
+    for (const linha of corpo.querySelectorAll<HTMLElement>("tr[data-regiao]")) {
+      const regiao = porRegiao.get(chaveRegiao(linha.dataset.regiao));
+      if (!regiao) continue;
+
+      const definir = (campo: string, texto: string) => {
+        const celula = linha.querySelector(`[data-campo="${campo}"]`);
+        if (celula) celula.textContent = texto;
+      };
+
+      definir("localizacao", regiao.localizacao || "—");
+      definir("percentual", formatarPercentual(regiao.percentualElNino));
+      definir("anomalia", formatarAnomalia(regiao.mediaAnomalia));
+    }
+  }
+
+  /**
+   * O Leaflet não dobra retângulos pelo antimeridiano: a Niño 4 (160°E–150°W)
+   * precisa ser dividida em duas caixas para o lado oeste (150°W–180°) ficar visível.
+   */
+  function segmentosDeLongitude(lon: [number, number]): Array<[number, number]> {
+    const [min, max] = lon;
+    if (min >= -180 && max <= 180) return [[min, max]];
+    return [
+      [min, 180],
+      [-180, max - 360],
+    ];
+  }
+
+  function desenharMapa(regioes: RegiaoApi[], mesReferencia: string): void {
+    const alvo = secao?.querySelector<HTMLElement>("[data-mapa-regioes]");
+    if (!alvo || alvo.dataset.pronto) return;
+
+    const validas = regioes.filter(
+      (r) => r.bounds && Number.isFinite(Number(r.mediaAnomalia)),
+    );
+    if (validas.length === 0) return;
+
+    alvo.dataset.pronto = "true";
+
+    const mapa = L.map(alvo, {
+      center: [-2, -140],
+      zoom: 1.3,
+      minZoom: 1,
+      scrollWheelZoom: false,
+      worldCopyJump: true,
+    });
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(mapa);
+
+    const rotulo = (regiao: RegiaoApi) =>
+      `<b>${chaveRegiao(regiao.regiao).replace(/^niño/, "Niño")}</b><br>` +
+      `Média mensal (${mesReferencia}): ${formatarAnomalia(regiao.mediaMensal)}<br>` +
+      `Status: ${statusDe(regiao.mediaMensal)}`;
+
+    for (const regiao of validas) {
+      const bounds = regiao.bounds;
+      if (!bounds) continue;
+
+      const cor = corStatus(regiao.mediaMensal);
+      const [latMin, latMax] = bounds.lat;
+
+      for (const [lonMin, lonMax] of segmentosDeLongitude(bounds.lon)) {
+        L.rectangle(
+          [
+            [latMin, lonMin],
+            [latMax, lonMax],
+          ],
+          { color: cor, weight: 2, fillColor: cor, fillOpacity: 0.18 },
+        )
+          .addTo(mapa)
+          .bindTooltip(rotulo(regiao), {
+            direction: "top",
+            className: "rotulo-mapa",
+            opacity: 1,
+          });
+      }
+    }
+
+    const legenda = new L.Control({ position: "bottomleft" });
+    legenda.onAdd = () => {
+      const div = L.DomUtil.create("div", "legenda-mapa");
+      div.innerHTML =
+        '<p class="legenda-titulo">Regiões de anomalias do El Niño</p>' +
+        '<div class="legenda-barra"></div>' +
+        '<div class="legenda-escala">' +
+          '<span class="legenda-frio">Resfriando </span>' +
+          '<span class="legenda-neutro" >Neutro</span>' +
+          '<span class="legenda-quente"> Aquecendo</span>' +
+        '</div>';
+      return div;
+    };
+    legenda.addTo(mapa);
+
+    window.requestAnimationFrame(() => mapa.invalidateSize());
+  }
+
+  async function carregar(): Promise<void> {
+    if (!secao) return;
+
+    let regioes: RegiaoApi[] = [];
+    let mesReferencia = secao.dataset.mesReferencia ?? "";
+    try {
+      const resposta = await fetch(`${baseApi}/api/anomalias/regioes`);
+      if (!resposta.ok) throw new Error(`Backend respondeu com HTTP ${resposta.status}.`);
+      const dados = (await resposta.json()) as {
+        regioes?: RegiaoApi[];
+        mesReferencia?: string | null;
+      };
+      regioes = dados.regioes ?? [];
+      mesReferencia = dados.mesReferencia ?? mesReferencia;
+    } catch {
+      regioes = JSON.parse(secao.dataset.regioes ?? "[]") as RegiaoApi[];
+    }
+
+    atualizarTabela(regioes);
+    desenharMapa(regioes, mesReferencia);
+  }
+
+  carregar();
+</script>

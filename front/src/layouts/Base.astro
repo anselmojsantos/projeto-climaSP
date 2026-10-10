@@ -1,0 +1,72 @@
+---
+import Sidebar from "../components/Sidebar.astro";
+import Topbar from "../components/Topbar.astro";
+import "../styles/global.css";
+
+interface Props {
+  titulo: string;
+}
+
+const { titulo } = Astro.props;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titulo} &middot; ClimaSP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:wght@100..900&display=swap"
+    />
+  </head>
+  <body class="m-0 min-h-screen bg-bg font-ui text-ink">
+    <div class="flex min-h-screen max-lg:flex-col">
+      <Topbar />
+      <Sidebar />
+
+      <main class="min-w-0 flex-1 px-4 py-7 xl:px-6 xl:py-10">
+        <h1 class="m-0 text-[28px] leading-tight font-semibold xl:text-[32px]">
+          {titulo}
+        </h1>
+        <slot />
+      </main>
+    </div>
+
+    <script>
+      const nav = document.querySelector<HTMLElement>("[data-nav]");
+      const fundo = document.querySelector<HTMLElement>("[data-nav-fundo]");
+      const botaoAbrir = document.querySelector<HTMLButtonElement>("[data-menu-abrir]");
+
+      function mostrar(aberta: boolean) {
+        if (!nav) return;
+
+        // O deslize e o fade vivem no bloco style da Sidebar, então o JS só
+        // marca o estado — nada de alternar classes de animação por aqui.
+        nav.toggleAttribute("data-aberta", aberta);
+        fundo?.toggleAttribute("data-aberta", aberta);
+        botaoAbrir?.setAttribute("aria-expanded", String(aberta));
+        document.documentElement.classList.toggle("overflow-hidden", aberta);
+      }
+
+      botaoAbrir?.addEventListener("click", () => mostrar(true));
+      document
+        .querySelector("[data-menu-fechar]")
+        ?.addEventListener("click", () => mostrar(false));
+      fundo?.addEventListener("click", () => mostrar(false));
+
+      // Num link dentro da gaveta a navegação já troca de página; fechar evita
+      // o overlay sobreviver ao carregamento.
+      nav?.querySelectorAll("a").forEach((link) =>
+        link.addEventListener("click", () => mostrar(false)),
+      );
+
+      document.addEventListener("keydown", (evento) => {
+        if (evento.key === "Escape") mostrar(false);
+      });
+    </script>
+  </body>
+</html>

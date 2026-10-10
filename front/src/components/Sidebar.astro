@@ -1,0 +1,138 @@
+---
+import { SECOES } from "../data/secoes";
+
+const atual = Astro.url.pathname.replace(/\/$/, "") || "/";
+---
+
+<div
+  data-nav-fundo
+  class="fixed inset-0 z-40 bg-deep/50 lg:hidden"
+  aria-hidden="true"
+></div>
+
+<aside
+  id="nav-principal"
+  data-nav
+  aria-label="Navegação principal"
+  class="fixed inset-y-0 left-0 z-50 flex w-[220px] flex-col bg-deep px-5 py-6 text-on-dark lg:sticky lg:top-0 lg:h-screen lg:shrink-0"
+>
+  <div class="flex items-start justify-between gap-2">
+    <a href="/boas-vindas" class="block">
+      <span class="block text-[15px] font-semibold tracking-wide">ClimaSP</span>
+      <span class="mt-1 block text-[11px] uppercase tracking-wide text-sidebar-label">
+        Plataforma de dados &middot; Capital
+      </span>
+    </a>
+
+    <button
+      type="button"
+      data-menu-fechar
+      aria-label="Fechar menu de navegação"
+      class="-mr-1.5 -mt-1 grid size-9 shrink-0 place-items-center rounded-lg text-on-dark transition-colors hover:bg-white/10 lg:hidden"
+    >
+      <svg viewBox="0 0 20 20" class="size-4" aria-hidden="true">
+        <path
+          d="M4 4l12 12M16 4L4 16"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"></path>
+      </svg>
+    </button>
+  </div>
+
+  <nav class="mt-8 flex flex-col gap-0.5">
+    {
+      SECOES.map(({ slug, titulo }) => {
+        const href = `/${slug}`;
+        const ativo = atual === href || (atual === "/" && href === "/boas-vindas");
+
+        return (
+          <a
+            href={href}
+            aria-current={ativo ? "page" : undefined}
+            class:list={[
+              "flex items-center gap-2.5 rounded-lg px-2.5 py-2.5 text-[15px] no-underline transition-colors",
+              ativo
+                ? "bg-sidebar-active text-on-dark"
+                : "text-sidebar-label hover:bg-white/5 hover:text-on-dark",
+            ]}
+          >
+            <span
+              class:list={[
+                "size-2 shrink-0 rounded-full",
+                ativo ? "bg-accent" : "bg-sidebar-dot",
+              ]}
+            />
+            {titulo}
+          </a>
+        );
+      })
+    }
+  </nav>
+
+  <p class="mt-auto pt-8 text-[11px] tracking-wide text-sidebar-label">
+    INMET &middot; NOAA &middot; ANA &middot; CEMADEN
+  </p>
+</aside>
+
+<style>
+  /* A gaveta e o fundo ficam sempre montados; o estado é o atributo
+     data-aberta. O `hidden`/`visibility` sem atraso cortaria a saída, por isso
+     a visibility só é aplicada 320ms depois, quando o deslize já terminou. */
+  [data-nav],
+  [data-nav-fundo] {
+    pointer-events: none;
+  }
+
+  [data-nav] {
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition:
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 320ms;
+  }
+
+  [data-nav-fundo] {
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity 320ms ease,
+      visibility 0s linear 320ms;
+  }
+
+  [data-nav][data-aberta],
+  [data-nav-fundo][data-aberta] {
+    pointer-events: auto;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  [data-nav][data-aberta] {
+    transform: translateX(0);
+  }
+
+  [data-nav-fundo][data-aberta] {
+    opacity: 1;
+  }
+
+  /* No desktop a lateral é estática: nada de animação nem de fundo escurecido. */
+  @media (min-width: 64rem) {
+    [data-nav] {
+      pointer-events: auto;
+      visibility: visible;
+      transform: none;
+      transition: none;
+    }
+
+    [data-nav-fundo] {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-nav],
+    [data-nav-fundo] {
+      transition: none;
+    }
+  }
+</style>

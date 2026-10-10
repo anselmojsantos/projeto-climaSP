@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import UltimaLeitura from "../components/UltimaLeitura";
+
+const baseApi = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3333";
+---
+
+<Base titulo="Visão Geral">
+	<UltimaLeitura client:load baseApi={baseApi} />
+</Base>

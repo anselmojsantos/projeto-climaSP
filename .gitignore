@@ -1,0 +1,16 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+.astro/
+
+# Ambiente (credenciais)
+.env
+.env.*
+!.env.example
+
+# Logs e temporarios
+*.log
+.DS_Store
+Thumbs.db

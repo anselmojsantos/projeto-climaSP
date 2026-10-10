@@ -1,0 +1,9 @@
+node_modules/
+dist/
+
+# Credenciais do banco — nunca versionar
+.env
+.env.*
+!.env.example
+
+*.local
