@@ -1,6 +1,7 @@
 ---
-import Sidebar from "../components/Sidebar.astro";
-import Topbar from "../components/Topbar.astro";
+import Sidebar from "./Sidebar.astro";
+import Topbar from "./Topbar.astro";
+import Rodape from "./Rodape.astro";
 import "../styles/global.css";
 
 interface Props {
@@ -28,12 +29,16 @@ const { titulo } = Astro.props;
       <Topbar />
       <Sidebar />
 
-      <main class="min-w-0 flex-1 px-4 py-7 xl:px-6 xl:py-10">
-        <h1 class="m-0 text-[28px] leading-tight font-semibold xl:text-[32px]">
-          {titulo}
-        </h1>
-        <slot />
-      </main>
+      <div class="flex min-w-0 flex-1 flex-col">
+        <main class="min-w-0 flex-1 px-4 py-7 xl:px-6 xl:py-10">
+          <h1 class="m-0 text-[28px] leading-tight font-semibold xl:text-[32px]">
+            {titulo}
+          </h1>
+          <slot />
+        </main>
+
+        <Rodape />
+      </div>
     </div>
 
     <script>

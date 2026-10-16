@@ -1,0 +1,11 @@
+---
+import Base from "../layouts/Base.astro";
+import BoasVindas from "../components/boas-vindas/index";
+import { SECOES } from "../types/secoes";
+
+const baseApi = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3333";
+const titulo = SECOES.find((secao) => secao.slug === "home")!.titulo;
+---
+<Base titulo={titulo}>
+  <BoasVindas client:load baseApi={baseApi} />
+</Base>

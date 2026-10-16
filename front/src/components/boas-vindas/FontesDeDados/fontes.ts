@@ -1,9 +1,4 @@
-/** Fontes públicas que alimentam o estudo, com a cadência de cada uma. */
-export interface Fonte {
-  nome: string;
-  descricao: string;
-  cadencia: string;
-}
+import type { Fonte } from "./types";
 
 export const FONTES: Fonte[] = [
   {

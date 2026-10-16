@@ -1,12 +1,3 @@
-/**
- * Fallback estático da tabela de regiões Niño — espelha o df_anomalias.
- *
- * O componente RegioesNino sobrescreve estes valores com GET
- * /api/anomalias/regioes. `bounds` são as caixas lat/lon (em graus) extraídas
- * do df_anomalias; a Niño 4 (160°E–150°W) usa lon [160, 210] por cruzar o
- * antimeridiano. A linha `guia` (Niño 1+2) é a maior anomalia e o vínculo mais
- * forte com o clima de São Paulo.
- */
 export interface BoundsRegiao {
   lat: [number, number];
   lon: [number, number];
@@ -22,7 +13,6 @@ export interface RegiaoNino {
   bounds: BoundsRegiao;
 }
 
-/** Mês de referência de df_media_mensal usado no rótulo do mapa. */
 export const MES_MENSAL = "set/2026";
 
 export const REGIOES_NINO: RegiaoNino[] = [

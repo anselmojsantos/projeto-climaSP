@@ -1,9 +1,4 @@
-/** Pipeline do estudo, do oceano à previsão na capital. */
-export interface Etapa {
-  numero: string;
-  titulo: string;
-  descricao: string;
-}
+import type { Etapa } from "./types";
 
 export const ETAPAS: Etapa[] = [
   {

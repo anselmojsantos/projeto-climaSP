@@ -1,0 +1,47 @@
+.leaflet-container {
+  background: #e8eef4;
+  font: inherit;
+}
+
+.rotulo-mapa {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(13, 27, 42, 0.15);
+  color: #0d1b2a;
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 4px 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rotulo-mapa::before {
+  display: none;
+}
+
+.legenda-mapa {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(13, 27, 42, 0.15);
+  color: #0d1b2a;
+  font-size: 11px;
+  line-height: 1.3;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.legenda-mapa .legenda-titulo {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.legenda-mapa .legenda-barra {
+  background: linear-gradient(90deg, #0e3a5d, #8a9099, #cb182b);
+  border-radius: 4px;
+  height: 8px;
+  width: 160px;
+}
