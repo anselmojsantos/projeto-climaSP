@@ -1,0 +1,50 @@
+- generic [active] [ref=f5e1]:
+  - generic [ref=f5e2]:
+    - complementary "Navegação principal" [ref=f5e3]:
+      - link "ClimaSP Plataforma de dados · Capital" [ref=f5e5] [cursor=pointer]:
+        - /url: /home
+        - generic [ref=f5e6]: ClimaSP
+        - generic [ref=f5e7]: Plataforma de dados · Capital
+      - navigation [ref=f5e8]:
+        - link "Home" [ref=f5e9] [cursor=pointer]:
+          - /url: /home
+        - link "Dados Noaa" [ref=f5e11] [cursor=pointer]:
+          - /url: /dados-noaa
+        - link "Mapa de SP" [ref=f5e13] [cursor=pointer]:
+          - /url: /mapa-sp
+        - link "Séries temporais" [ref=f5e15] [cursor=pointer]:
+          - /url: /series-temporais
+        - link "Correlações" [ref=f5e17] [cursor=pointer]:
+          - /url: /correlacoes
+        - link "Predições" [ref=f5e19] [cursor=pointer]:
+          - /url: /predicoes
+        - link "Alertas" [ref=f5e21] [cursor=pointer]:
+          - /url: /alertas
+      - paragraph [ref=f5e23]: INMET · NOAA · ANA · CEMADEN
+    - generic [ref=f5e24]:
+      - main [ref=f5e25]:
+        - heading "Análise - Base de Dados Noaa" [level=1] [ref=f5e26]
+        - generic [ref=f5e28]:
+          - region [ref=f5e30]:
+            - paragraph [ref=f5e31]: 1 · Contexto
+            - heading "Evolução mensal das anomalias por região" [level=2] [ref=f5e32]
+            - paragraph [ref=f5e33]: Média mensal da anomalia de TSM nas quatro regiões Niño, do início ao fim do período observado.
+            - paragraph [ref=f5e34]: Carregando dados do banco…
+          - region [ref=f5e36]:
+            - paragraph [ref=f5e37]: 2 · Método
+            - heading "Análogos históricos de 2026" [level=2] [ref=f5e38]
+            - paragraph [ref=f5e39]: Nove anos cuja curva JFM–JAS mais se aproxima da de 2026, comparados entre si, com a média dos análogos e o alvo 2026.
+            - paragraph [ref=f5e40]: Carregando dados do banco…
+          - region [ref=f5e42]:
+            - paragraph [ref=f5e43]: 3 · Índice
+            - heading "RONI/3.4 — 2026 por temporada" [level=2] [ref=f5e44]
+            - paragraph [ref=f5e45]: "Média móvel de 3 meses do Niño 3.4 em 2026: JFM–JAS observados e ASO–NDJ projetados por regressão sobre os anos análogos. Os limiares de ±0,5 °C separam El Niño, La Niña e Neutro."
+            - paragraph [ref=f5e46]: Carregando dados do banco…
+      - contentinfo [ref=f5e47]:
+        - paragraph [ref=f5e48]: Projeto Integrado IV · Univesp
+        - paragraph [ref=f5e49]: "Dados: NOAA / CPC, INMET, ANA e CEMADEN"
+  - generic [ref=f5e52]:
+    - button [ref=f5e53]
+    - button [ref=f5e59]
+    - button [ref=f5e63]
+    - button [ref=f5e68]

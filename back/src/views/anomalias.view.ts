@@ -1,6 +1,7 @@
 import type {
 	AnomaliaRegiaoRow,
 	MediaMensalRow,
+	MediaMensalSerieRow,
 } from "../models/anomalias.model.js";
 
 type NumericValue = number | string | null;
@@ -143,5 +144,69 @@ export function PresentAnomaliasRegioes(
 			};
 		}),
 		mesReferencia: mesReferenciaDe(mediaMensal),
+	};
+}
+
+const REGIOES_MEDIA = [
+	{ chave: "nino12", nome: "Niño 1+2" },
+	{ chave: "nino3", nome: "Niño 3" },
+	{ chave: "nino34", nome: "Niño 3.4" },
+	{ chave: "nino4", nome: "Niño 4" },
+] as const;
+
+export interface PontoMediaMensalView {
+	mes: string;
+	rotulo: string;
+	nino12: number | null;
+	nino3: number | null;
+	nino34: number | null;
+	nino4: number | null;
+}
+
+export interface MediaMensalView {
+	ano: number;
+	regioes: { chave: string; nome: string }[];
+	serie: PontoMediaMensalView[];
+}
+
+/** df_media_mensal guarda NUMERIC, que o driver entrega como texto. */
+function paraNumero(valor: NumericValue): number | null {
+	if (valor === null) return null;
+	const numero = typeof valor === "number" ? valor : Number.parseFloat(valor);
+	return Number.isFinite(numero) ? numero : null;
+}
+
+/** A coluna é double precision: 3 casas bastam e evitam ruído de ponto flutuante. */
+function paraNumeroMensal(valor: NumericValue): number | null {
+	const numero = paraNumero(valor);
+	return numero === null ? null : Math.round(numero * 1000) / 1000;
+}
+
+/**
+ * Extrai o mês do texto ISO (AAAA-MM-DD) sem passar por Date: converter para
+ * Date interpretaria a data como UTC e, em UTC-3, o mês anterior.
+ */
+function mesDoTexto(data: string | null): string | null {
+	if (!data) return null;
+	const mes = Number.parseInt(data.slice(5, 7), 10);
+	if (!Number.isInteger(mes) || mes < 1 || mes > 12) return null;
+	return MESES[mes - 1] ?? null;
+}
+
+export function PresentMediaMensal(rows: MediaMensalSerieRow[]): MediaMensalView {
+	return {
+		ano: ANO_ESTUDO,
+		regioes: REGIOES_MEDIA.map(({ chave, nome }) => ({ chave, nome })),
+		serie: rows.map((row) => {
+			const mes = mesDoTexto(row.observation_date) ?? MESES[row.index - 1] ?? "";
+			return {
+				mes,
+				rotulo: `${mes}/${ANO_ESTUDO}`,
+				nino12: paraNumeroMensal(row.nino12),
+				nino3: paraNumeroMensal(row.nino3),
+				nino34: paraNumeroMensal(row.nino34),
+				nino4: paraNumeroMensal(row.nino4),
+			};
+		}),
 	};
 }

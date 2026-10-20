@@ -22,3 +22,14 @@ export async function FindDf2026ByTempory(
     );
     return rows[0] ?? null;
 }
+
+export async function FindTemporadas2026(): Promise<Df2026Row[]> {
+    const { rows } = await pool.query<Df2026Row>(
+        `
+         SELECT "Ano", "Temporada", "NINO34_MM3", "Fase", "Origem"
+         FROM df_2026
+         ORDER BY "index"
+        `,
+    );
+    return rows;
+}

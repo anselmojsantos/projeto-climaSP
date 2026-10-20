@@ -9,7 +9,7 @@ export const SECOES: Secao[] = [
   {
     slug: "home",
     menu: "Home",
-    titulo: "Bem vindos(ass)",
+    titulo: "Bem vindos(as)",
   },
   {
     slug: "dados-noaa",
@@ -17,28 +17,28 @@ export const SECOES: Secao[] = [
     titulo: "Análise - Base de Dados Noaa",
   },
   {
-    slug: "mapa-sp",
-    menu: "Mapa de SP",
-    titulo: "Mapa de SP",
+    slug: "menu-3",
+    menu: "Menu-3",
+    titulo: "Menu-3",
   },
   {
-    slug: "series-temporais",
-    menu: "Séries temporais",
-    titulo: "Séries temporais",
+    slug: "menu-4",
+    menu: "Menu-4",
+    titulo: "Menu-4",
   },
   {
-    slug: "correlacoes",
-    menu: "Correlações",
-    titulo: "Correlações",
+    slug: "menu-5",
+    menu: "Menu-5",
+    titulo: "Menu-5",
   },
   {
-    slug: "predicoes",
-    menu: "Predições",
-    titulo: "Predições",
+    slug: "menu-6",
+    menu: "Menu-6",
+    titulo: "Menu-6",
   },
   {
-    slug: "alertas",
-    menu: "Alertas",
-    titulo: "Alertas",
+    slug: "menu-7",
+    menu: "Menu-7",
+    titulo: "Menu-7",
   },
 ];

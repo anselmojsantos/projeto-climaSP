@@ -1,0 +1,8 @@
+---
+import Base from "../layouts/Base.astro";
+import { SECOES } from "../types/secoes";
+
+const titulo = SECOES.find((secao) => secao.slug === "menu-3")!.titulo;
+---
+
+<Base titulo={titulo} />

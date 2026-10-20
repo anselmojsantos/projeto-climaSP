@@ -19,6 +19,10 @@ export interface MediaMensalRow {
 	nino4: NumericValue;
 }
 
+export interface MediaMensalSerieRow extends MediaMensalRow {
+	observation_date: string | null;
+}
+
 /**
  * Resumo por região Niño usado na tabela "Onde o NOAA mede o El Niño".
  *
@@ -52,4 +56,21 @@ export async function FindUltimaMediaMensal(): Promise<MediaMensalRow | null> {
 		`,
 	);
 	return rows[0] ?? null;
+}
+
+/**
+ * Série completa de df_media_mensal: a média mensal de cada região Niño ao longo
+ * do período do estudo. O texto da data vem no formato ISO, consumido pela view
+ * para rotular o mês.
+ */
+export async function FindMediaMensal(): Promise<MediaMensalSerieRow[]> {
+	const { rows } = await pool.query<MediaMensalSerieRow>(
+		`
+		 SELECT "index", observation_date::text AS observation_date,
+		        nino12, nino3, nino34, nino4
+		 FROM df_media_mensal
+		 ORDER BY observation_date
+		`,
+	);
+	return rows;
 }
