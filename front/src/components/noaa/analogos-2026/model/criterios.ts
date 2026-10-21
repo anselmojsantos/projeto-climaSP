@@ -25,9 +25,4 @@ export const CRITERIOS_ANALOGOS: CriterioAnalogos[] = [
     limiar: "≥ 0,60 °C",
     mede: "range do ano; descarta curva achatada",
   },
-  {
-    nome: "JAS do candidato",
-    limiar: "≥ 0,79 °C",
-    mede: "o ano também estava em El Niño em JAS",
-  },
 ];

@@ -38,6 +38,8 @@ export default function Analogos2026({ baseApi }: Props) {
     };
   }, [baseApi]);
 
+  const totalAnalogos = estado.fase === "ok" ? estado.analogos.length : null;
+
   return (
     <section aria-labelledby="analogos-2026">
       <p className="m-0 mb-1 text-[11px] uppercase tracking-wide text-ink-secondary">
@@ -47,8 +49,8 @@ export default function Analogos2026({ baseApi }: Props) {
         Análogos históricos de 2026
       </h2>
       <p className="mt-1.5 mb-0 text-[15px] leading-[1.3] text-ink-secondary">
-        Nove anos cuja curva JFM–ASO mais se aproxima da de 2026, comparados entre si,
-        com a média dos análogos e o alvo 2026.
+        {totalAnalogos ? `${totalAnalogos} anos` : "Os anos"} cuja curva JFM–ASO mais se
+        aproxima da de 2026, comparados entre si, com a média dos análogos e o alvo 2026.
       </p>
 
       {estado.fase === "carregando" && (

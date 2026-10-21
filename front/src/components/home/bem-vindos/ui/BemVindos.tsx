@@ -3,6 +3,9 @@ const RONI_URL = "https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt";
 const RONI_PAGINA_URL =
   "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/";
 
+const TSM_SEMANAL_URL =
+  "https://cpc.ncep.noaa.gov/data/indices/rel_wksst9120.txt";
+
 const NOTA_FONTES =
   "Fontes: NOAA/CPC (índices Niño — atualização semanal) · INMET (chuva/temperatura SP) · ANA (hidrologia) · CEMADEN (710 estações de alerta)";
 
@@ -38,6 +41,14 @@ export default function BemVindos() {
           target="_blank"
           rel="noopener noreferrer">
           NOAA/CPC — página do RONI
+        </a>
+        {" · "}
+        <a className=
+          "underline underline-offset-2 transition-colors hover:text-accent"
+          href={TSM_SEMANAL_URL}
+          target="_blank"
+          rel="noopener noreferrer">
+          NOAA/CPC — TSM semanal (relativa)
         </a>
       </p>
     </div>
