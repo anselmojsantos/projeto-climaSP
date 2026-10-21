@@ -17,7 +17,7 @@ export const CRITERIOS_ANALOGOS: CriterioAnalogos[] = [
   },
   {
     nome: "Trimestres divergentes",
-    limiar: "≤ 4",
+    limiar: "≤ 5",
     mede: "trimestres que diferem mais de 0,5 °C",
   },
   {

@@ -11,6 +11,7 @@ export interface AnalogoRow {
 	MJJ: NumericValue;
 	JJA: NumericValue;
 	JAS: NumericValue;
+	ASO: NumericValue;
 	RMSE: NumericValue;
 	Correlacao: NumericValue;
 	Amplitude: NumericValue;
@@ -23,7 +24,15 @@ export interface CandidatosRow {
 	ate: NumericValue;
 }
 
-/** Universo de onde saíram os análogos: todos os anos com janela JFM–JAS completa. */
+export interface FuturoRow {
+	Ano: NumericValue;
+	ASO: NumericValue;
+	SON: NumericValue;
+	OND: NumericValue;
+	NDJ: NumericValue;
+}
+
+/** Universo de onde saíram os análogos: todos os anos com janela JFM–ASO completa. */
 export async function FindCandidatos(): Promise<CandidatosRow> {
 	const { rows } = await pool.query<CandidatosRow>(
 		`
@@ -36,10 +45,28 @@ export async function FindCandidatos(): Promise<CandidatosRow> {
 	return rows[0] ?? { total: 0, de: null, ate: null };
 }
 
+/** SON–NDJ observados de cada ano — janela que a projeção precisa estimar. */
+export async function FindFuturoAnalogos(): Promise<FuturoRow[]> {
+	const { rows } = await pool.query<FuturoRow>(
+		`
+		 SELECT "YR" AS "Ano",
+		        max(CASE WHEN "SEAS" = 'ASO' THEN "ANOM" END) AS "ASO",
+		        max(CASE WHEN "SEAS" = 'SON' THEN "ANOM" END) AS "SON",
+		        max(CASE WHEN "SEAS" = 'OND' THEN "ANOM" END) AS "OND",
+		        max(CASE WHEN "SEAS" = 'NDJ' THEN "ANOM" END) AS "NDJ"
+		 FROM df_hist_roni
+		 WHERE "SEAS" IN ('ASO', 'SON', 'OND', 'NDJ')
+		 GROUP BY "YR"
+		 ORDER BY "YR"
+		`,
+	);
+	return rows;
+}
+
 export async function FindAnalogos(): Promise<AnalogoRow[]> {
 	const { rows } = await pool.query<AnalogoRow>(
 		`
-		 SELECT "Ano", "JFM", "FMA", "MAM", "AMJ", "MJJ", "JJA", "JAS",
+		 SELECT "Ano", "JFM", "FMA", "MAM", "AMJ", "MJJ", "JJA", "JAS", "ASO",
 		        "RMSE", "Correlacao", "Amplitude", "trim_divergente"
 		 FROM df_analogos
 		 ORDER BY "RMSE"

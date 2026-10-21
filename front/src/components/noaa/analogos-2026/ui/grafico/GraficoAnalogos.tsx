@@ -66,7 +66,7 @@ function corDoAno(indice: number): string {
 /** De onde saíram os análogos: universo amostrado e recorte final. */
 function fraseAmostra(selecionados: number, candidatos: Candidatos | null): string {
   if (!candidatos) {
-    return `dos anos com a janela JFM–JAS completa na base histórica do NOAA foram selecionados os ${selecionados} mais parecidos com 2026, pelos critérios abaixo.`;
+    return `dos anos com a janela JFM–ASO completa na base histórica do NOAA foram selecionados os ${selecionados} mais parecidos com 2026, pelos critérios abaixo.`;
   }
 
   const periodo =
@@ -74,7 +74,7 @@ function fraseAmostra(selecionados: number, candidatos: Candidatos | null): stri
       ? ` (${candidatos.de}–${candidatos.ate})`
       : "";
 
-  return `de ${candidatos.total} anos com a janela JFM–JAS completa na base histórica do NOAA${periodo}, foram selecionados os ${selecionados} mais parecidos com 2026, pelos critérios abaixo.`;
+  return `de ${candidatos.total} anos com a janela JFM–ASO completa na base histórica do NOAA${periodo}, foram selecionados os ${selecionados} mais parecidos com 2026, pelos critérios abaixo.`;
 }
 
 export default function GraficoAnalogos({
@@ -124,12 +124,12 @@ export default function GraficoAnalogos({
   return (
     <figure className="m-0 flex flex-col gap-4 rounded-2xl bg-soft p-4 xl:flex-row xl:items-start 2xl:flex-col">
       <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <div className="overflow-x-auto">
+        <div className="w-full">
           <svg
             viewBox={`0 0 ${LARGURA} ${ALTURA}`}
-            className="mx-auto h-auto w-full min-w-[520px] max-w-[600px]"
+            className="mx-auto block h-auto w-full"
             role="img"
-            aria-label={`Curvas de JFM a JAS de ${analogos.length} anos análogos, a média dos análogos e o alvo 2026.`}
+            aria-label={`Curvas de JFM a ASO de ${analogos.length} anos análogos, a média dos análogos e o alvo 2026.`}
           >
             {ticks.map((tick) => (
               <line
@@ -288,7 +288,7 @@ export default function GraficoAnalogos({
           </svg>
         </div>
   
-        <div className="mx-auto flex w-full max-w-[600px] flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-ink-secondary">
+        <div className="mx-auto flex w-full flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-ink-secondary">
           {analogos.map((analogo, indice) => (
             <BotaoLegenda
               key={analogo.ano ?? indice}
@@ -383,8 +383,8 @@ export default function GraficoAnalogos({
         <p className="m-0">
           <span className="font-semibold text-ink-secondary">Temporadas:</span> cada rótulo é
           uma janela de 3 meses que termina no mês da última letra — JFM = jan–fev–mar, FMA =
-          fev–mar–abr, MAM = mar–abr–mai, AMJ = abr–mai–jun, MJJ = mai–jun–jul, JJA = jun–jul–ago
-          e JAS = jul–ago–set. Cada valor é a média móvel de 3 meses (MM3) do RONI/ONI: no
+          fev–mar–abr, MAM = mar–abr–mai, AMJ = abr–mai–jun, MJJ = mai–jun–jul, JJA = jun–jul–ago,
+          JAS = jul–ago–set e ASO = ago–set–out. Cada valor é a média móvel de 3 meses (MM3) do RONI/ONI: no
           notebook, as médias mensais das leituras semanais da NOAA recebem uma janela
           deslizante de 3 meses.
         </p>

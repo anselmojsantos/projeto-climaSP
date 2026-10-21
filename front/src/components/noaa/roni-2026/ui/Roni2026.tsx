@@ -54,13 +54,13 @@ export default function Roni2026({ baseApi }: Props) {
   return (
     <section aria-labelledby="roni-2026">
       <p className="m-0 mb-1 text-[11px] uppercase tracking-wide text-ink-secondary">
-        3 · Índice
+        4 · Índice
       </p>
       <h2 id="roni-2026" className="m-0 text-[20px] leading-[1.2] font-semibold">
         RONI/3.4 — 2026 por temporada
       </h2>
       <p className="mt-1.5 mb-0 text-[15px] leading-[1.3] text-ink-secondary">
-        Média móvel de 3 meses do Niño 3.4 em 2026: JFM–JAS observados e ASO–NDJ
+        Média móvel de 3 meses do Niño 3.4 em 2026: JFM–ASO observados e SON–NDJ
         projetados por regressão sobre os anos análogos. Os limiares de ±0,5 °C
         separam El Niño, La Niña e Neutro.
       </p>

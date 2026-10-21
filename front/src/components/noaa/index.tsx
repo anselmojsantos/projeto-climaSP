@@ -1,6 +1,8 @@
 import Analogos2026 from "./analogos-2026";
 import MediaMensal from "./media-mensal";
 import Roni2026 from "./roni-2026";
+import SerieHistorica from "./serie-historica";
+import Validacao2026 from "./validacao-2026";
 
 interface Props {
   baseApi: string;
@@ -16,8 +18,14 @@ export default function Noaa({ baseApi }: Props) {
         <div className="min-w-0">
           <Analogos2026 baseApi={baseApi} />
         </div>
+        <div className="min-w-0 2xl:col-span-2">
+          <SerieHistorica baseApi={baseApi} />
+        </div>
         <div className="min-w-0">
           <Roni2026 baseApi={baseApi} />
+        </div>
+        <div className="min-w-0">
+          <Validacao2026 baseApi={baseApi} />
         </div>
       </div>
     </>

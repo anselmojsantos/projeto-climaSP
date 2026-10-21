@@ -17,7 +17,9 @@ export default function BoasVindas({ baseApi }: Props) {
         <CardElNino baseApi={baseApi} />
       </div>
 
-      <FontesDeDados />
+      <div className="mt-12">
+        <FontesDeDados />
+      </div>
 
       <div className="mt-12">
         <RegioesNino baseApi={baseApi} />

@@ -1,5 +1,5 @@
-﻿Região;Médias da anomalias (°C);El Niño (>= 0.5°C);La Niña (<= -0.5°C);Neutro (entre ±0.5°C);Latitude;Longitude;Descrição
-Niño 1+2;1.63;0,86;0,08;0,06;0°–10° Sul;90°W–80°W;Costa do Peru
-Niño 3;0.72;0,53;0,14;0,33;5°N–5°S;150°W–90°W;Pacífico Leste
-Niño 3.4;0.43;0,47;0,31;0,22;5°N–5°S;170°W–120°W;Pacífico Centro-Leste (usada para o índice Roni/ONI)
-Niño 4;0.20;0,36;0,03;0,61;5°N–5°S;160°E–150°W;Pacífico Centro-Oeste
+Região;Médias da anomalias (°C);El Niño (>= 0.5°C);La Niña (<= -0.5°C);Neutro (entre ±0.5°C);Latitude;Longitude;Descrição
+Niño 1+2;1.94;0,88;0,07;0,05;0°–10° Sul;90°W–80°W;Costa do Peru
+Niño 3;1.03;0,59;0,12;0,29;5°N–5°S;150°W–90°W;Pacífico Leste
+Niño 3.4;0.65;0,54;0,27;0,20;5°N–5°S;170°W–120°W;Pacífico Centro-Leste (usada para o índice RONI/ONI)
+Niño 4;0.18;0,32;0,02;0,66;5°N–5°S;160°E–150°W;Pacífico Centro-Oeste

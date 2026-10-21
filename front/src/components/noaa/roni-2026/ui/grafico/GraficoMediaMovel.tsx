@@ -23,7 +23,7 @@ function corDaFase(fase: string | null) {
   return (fase && CORES_FASE[fase as keyof typeof CORES_FASE]) || FASE_NEUTRA;
 }
 
-/** Variação em relação ao JAS, com sinal explícito para não virar ambiguidade. */
+/** Variação em relação ao ASO, com sinal explícito para não virar ambiguidade. */
 function sinalDoDelta(delta: number): string {
   return `${delta >= 0 ? "+" : "−"}${formatarNumero(Math.abs(delta))}`;
 }
@@ -82,12 +82,12 @@ export default function GraficoMediaMovel({ pontos }: Props) {
   return (
     <figure className="m-0 flex flex-col gap-4 rounded-2xl bg-soft p-4 xl:flex-row xl:items-start 2xl:flex-col">
       <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <div className="overflow-x-auto">
+        <div className="w-full">
           <svg
             viewBox={`0 0 ${LARGURA} ${ALTURA}`}
-            className="mx-auto h-auto w-full min-w-[520px] max-w-[600px]"
+            className="mx-auto block h-auto w-full"
             role="img"
-            aria-label={`RONI 3.4 de 2026 por temporada. Última observada: ${ultimoObservado.temporada}, ${formatarNumero(ultimoObservado.roni)} graus Celsius, fase ${ultimoObservado.fase}. Projeção ASO–NDJ em linha tracejada, por regressão linear sobre os anos análogos.`}
+            aria-label={`RONI 3.4 de 2026 por temporada. Última observada: ${ultimoObservado.temporada}, ${formatarNumero(ultimoObservado.roni)} graus Celsius, fase ${ultimoObservado.fase}. Projeção SON–NDJ em linha tracejada, por regressão linear sobre os anos análogos.`}
         >
           {ticks.map((tick) => (
             <line
@@ -219,7 +219,7 @@ export default function GraficoMediaMovel({ pontos }: Props) {
           </svg>
         </div>
   
-        <div className="mx-auto flex w-full max-w-[600px] flex-wrap items-center gap-4 text-[14px] text-ink-secondary">
+        <div className="mx-auto flex w-full flex-wrap items-center gap-4 text-[14px] text-ink-secondary">
           {(["El Niño", "Neutro", "La Niña"] as const).map((fase) => (
             <span key={fase} className="flex items-center gap-1.5">
               <span className={`${CORES_FASE[fase].legenda} h-3 w-3 rounded-full`} />
@@ -245,8 +245,8 @@ export default function GraficoMediaMovel({ pontos }: Props) {
         <p className="m-0">
           <span className="font-semibold text-ink-secondary">Projeção:</span> com os anos
           análogos como amostra, ajustou-se uma regressão linear para cada temporada futura —
-          a reta aprende, nos análogos, como o RONI de JAS se relaciona com o que veio depois
-          (ASO, SON, OND e NDJ). Aplicando o valor observado de {ultimoObservado.temporada} (
+          a reta aprende, nos análogos, como o RONI de ASO se relaciona com o que veio depois
+          (SON, OND e NDJ). Aplicando o valor observado de {ultimoObservado.temporada} (
           {formatarNumero(ultimoObservado.roni)} °C) como entrada, ela estima os valores
           abaixo.
         </p>
@@ -254,7 +254,7 @@ export default function GraficoMediaMovel({ pontos }: Props) {
         {previstos.length > 0 && (
           <table className="w-full border-collapse text-left text-[14px]">
             <caption className="sr-only">
-              RONI previsto por temporada e variação em relação ao JAS observado
+              RONI previsto por temporada e variação em relação ao ASO observado
             </caption>
             <thead>
               <tr className="text-ink-secondary">
@@ -271,7 +271,7 @@ export default function GraficoMediaMovel({ pontos }: Props) {
                   Previsto
                 </th>
                 <th scope="col" className="border-b border-data-neutral/30 py-1 font-semibold">
-                  Δ vs JAS (°C)
+                  Δ vs ASO (°C)
                 </th>
               </tr>
             </thead>
@@ -297,7 +297,7 @@ export default function GraficoMediaMovel({ pontos }: Props) {
         )}
 
         <p className="m-0">
-          <span className="font-semibold text-ink-secondary">Δ vs JAS:</span> diferença, em
+          <span className="font-semibold text-ink-secondary">Δ vs ASO:</span> diferença, em
           °C, entre cada valor projetado e o último observado (
           {ultimoObservado.temporada}, {formatarNumero(ultimoObservado.roni)} °C) — positivo
           significa que o evento ganha intensidade.

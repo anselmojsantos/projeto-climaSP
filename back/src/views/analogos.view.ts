@@ -1,4 +1,4 @@
-import type { AnalogoRow, CandidatosRow } from "../models/analogos.model.js";
+import type { AnalogoRow, CandidatosRow, FuturoRow } from "../models/analogos.model.js";
 import type { Df2026Row } from "../models/df2026.model.js";
 
 type NumericValue = number | string | null;
@@ -12,11 +12,16 @@ export const TEMPORADAS_JANELA = [
 	"MJJ",
 	"JJA",
 	"JAS",
+	"ASO",
 ] as const;
+
+/** Temporadas que a projeção por regressão precisa estimar. */
+export const TEMPORADAS_FUTURO = ["SON", "OND", "NDJ"] as const;
 
 export interface AnalogoView {
 	ano: number | null;
 	valores: (number | null)[];
+	futuro: (number | null)[];
 	rmse: number | null;
 	correlacao: number | null;
 	amplitude: number | null;
@@ -35,6 +40,9 @@ export interface AnalogosView {
 	media: (number | null)[];
 	candidatos: CandidatosView;
 	analogos: AnalogoView[];
+	temporadasFuturo: string[];
+	alvoFuturo: (number | null)[];
+	aso2026: number | null;
 }
 
 function numero(valor: NumericValue): number | null {
@@ -43,7 +51,7 @@ function numero(valor: NumericValue): number | null {
 	return Number.isFinite(convertido) ? convertido : null;
 }
 
-/** Série observada de 2026 (JFM–JAS) alinhada à janela dos análogos. */
+/** Série observada de 2026 (JFM–ASO) alinhada à janela dos análogos. */
 function alvoDe2026(rows: Df2026Row[]): (number | null)[] {
 	const observados = new Map(
 		rows
@@ -52,6 +60,17 @@ function alvoDe2026(rows: Df2026Row[]): (number | null)[] {
 	);
 
 	return TEMPORADAS_JANELA.map((temporada) => observados.get(temporada) ?? null);
+}
+
+/** Projeção de 2026 (SON–NDJ) alinhada às temporadas futuras. */
+function alvoFuturoDe2026(rows: Df2026Row[]): (number | null)[] {
+	const previstos = new Map(
+		rows
+			.filter((row) => row.Origem?.trim().toUpperCase() === "PREVISTO")
+			.map((row) => [row.Temporada.trim().toUpperCase(), numero(row.NINO34_MM3)]),
+	);
+
+	return TEMPORADAS_FUTURO.map((temporada) => previstos.get(temporada) ?? null);
 }
 
 /** Média dos análogos, temporada a temporada, ignorando valores ausentes. */
@@ -72,19 +91,37 @@ export function PresentAnalogos(
 	rows: AnalogoRow[],
 	alvoRows: Df2026Row[],
 	candidatos: CandidatosRow,
+	futuroRows: FuturoRow[],
 ): AnalogosView {
-	const analogos: AnalogoView[] = rows.map((row) => ({
-		ano: numero(row.Ano),
-		valores: TEMPORADAS_JANELA.map((temporada) => numero(row[temporada])),
-		rmse: numero(row.RMSE),
-		correlacao: numero(row.Correlacao),
-		amplitude: numero(row.Amplitude),
-		trimDivergente: numero(row.trim_divergente),
-	}));
+	const futuroPorAno = new Map<number, FuturoRow>();
+	for (const row of futuroRows) {
+		const ano = numero(row.Ano);
+		if (ano !== null) futuroPorAno.set(ano, row);
+	}
+
+	const analogos: AnalogoView[] = rows.map((row) => {
+		const ano = numero(row.Ano);
+		const futuro = ano !== null ? futuroPorAno.get(ano) : undefined;
+
+		return {
+			ano,
+			valores: TEMPORADAS_JANELA.map((temporada) => numero(row[temporada])),
+			futuro: TEMPORADAS_FUTURO.map((temporada) =>
+				futuro ? numero(futuro[temporada]) : null,
+			),
+			rmse: numero(row.RMSE),
+			correlacao: numero(row.Correlacao),
+			amplitude: numero(row.Amplitude),
+			trimDivergente: numero(row.trim_divergente),
+		};
+	});
+
+	const alvo2026 = alvoDe2026(alvoRows);
+	const aso2026 = alvo2026[TEMPORADAS_JANELA.length - 1] ?? null;
 
 	return {
 		temporadas: [...TEMPORADAS_JANELA],
-		alvo: alvoDe2026(alvoRows),
+		alvo: alvo2026,
 		media: mediaDosAnalogos(analogos),
 		candidatos: {
 			total: candidatos.total,
@@ -92,5 +129,8 @@ export function PresentAnalogos(
 			ate: numero(candidatos.ate),
 		},
 		analogos,
+		temporadasFuturo: [...TEMPORADAS_FUTURO],
+		alvoFuturo: alvoFuturoDe2026(alvoRows),
+		aso2026,
 	};
 }

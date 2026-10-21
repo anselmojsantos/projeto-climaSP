@@ -72,10 +72,10 @@ export default function GraficoMediaMensal({ ano, regioes, serie }: Props) {
 
   return (
     <figure className="m-0 flex flex-col gap-3 rounded-2xl bg-soft p-4">
-      <div className="overflow-x-auto">
+      <div className="w-full">
         <svg
           viewBox={`0 0 ${LARGURA} ${ALTURA}`}
-          className="mx-auto h-auto w-full min-w-[520px] max-w-[600px]"
+          className="mx-auto block h-auto w-full max-w-[600px]"
           role="img"
           aria-label={`Média mensal da anomalia de TSM em ${ano} nas quatro regiões Niño, de ${serie[0]?.mes} a ${serie[serie.length - 1]?.mes}.`}
         >

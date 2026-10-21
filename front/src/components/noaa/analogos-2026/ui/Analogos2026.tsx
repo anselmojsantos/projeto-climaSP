@@ -47,7 +47,7 @@ export default function Analogos2026({ baseApi }: Props) {
         Análogos históricos de 2026
       </h2>
       <p className="mt-1.5 mb-0 text-[15px] leading-[1.3] text-ink-secondary">
-        Nove anos cuja curva JFM–JAS mais se aproxima da de 2026, comparados entre si,
+        Nove anos cuja curva JFM–ASO mais se aproxima da de 2026, comparados entre si,
         com a média dos análogos e o alvo 2026.
       </p>
 
