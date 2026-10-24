@@ -199,7 +199,7 @@ export default function HeatmapEstacoes({
 						<span className="font-semibold text-ink-secondary">Cada célula</span>{" "}
 						agrega as estações que caem nela. A <strong>cor</strong> indica a média de
 						chuva no mês (mm); células claras não têm estação com leitura. Clique numa
-						célula para ver detalhes.
+						célula para ver detalhes. Clique nas células para visualiza-las
 					</p>
 					<p className="m-0 text-[12px] text-ink-secondary">
 						{estacoes.length} estações · {celulas.length} células com leitura
