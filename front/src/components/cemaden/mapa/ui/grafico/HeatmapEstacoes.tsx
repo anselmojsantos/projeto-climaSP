@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formatarNumero } from "../../lib/formato";
 import { corPorSoma } from "../../model/paleta";
 import {
@@ -8,9 +9,7 @@ import {
 	HEATMAP_LINHAS,
 } from "../../model/limiares";
 import type { Estacao } from "../../model/types";
-
-// Mudei as margens para 0, assim o gráfico encosta nas bordas
-const MARGEM = { topo: 0, direita: 0, base: 0, esquerda: 0 };
+import ModalEstacoes from "../../ui/cemaden-mensal/ModalEstacoes";
 
 interface Props {
 	estacoes: Estacao[];
@@ -22,6 +21,7 @@ interface Celula {
 	lin: number;
 	valores: number[];
 	nomes: string[];
+	estacoes: Estacao[]; // Guarda os dados para o modal
 }
 
 function celulaDe(
@@ -47,21 +47,23 @@ export default function HeatmapEstacoes({
 	estacoes,
 	compacto = false,
 }: Props) {
-	// Dimensões base do desenho (o espaço real de SP)
-	const LARGURA_GEO_BASE = 300;
-	const ALTURA_GEO_BASE = 400;
+	const [celulaSelecionada, setCelulaSelecionada] = useState<Celula | null>(null);
 
-	// Quantidade de células
+	const ALTURA_GEO_BASE = 400;
+	const LARGURA_GEO_BASE = compacto ? 300 : 550;
+
 	const COLUNAS = compacto ? 6 : HEATMAP_COLUNAS;
 	const LINHAS = compacto ? 8 : HEATMAP_LINHAS;
 
-	// Escala e posição
 	const LAT_MEDIA = (BOUNDS_SP.latMin + BOUNDS_SP.latMax) / 2;
 	const COS_LAT_MEDIA = Math.cos((LAT_MEDIA * Math.PI) / 180);
 	const LARGURA_GEO = (BOUNDS_SP.lonMax - BOUNDS_SP.lonMin) * COS_LAT_MEDIA;
 	const ALTURA_GEO = BOUNDS_SP.latMax - BOUNDS_SP.latMin;
-	
-	const ESCALA = Math.min(LARGURA_GEO_BASE / LARGURA_GEO, ALTURA_GEO_BASE / ALTURA_GEO);
+
+	const ESCALA = Math.max(
+		LARGURA_GEO_BASE / LARGURA_GEO,
+		ALTURA_GEO_BASE / ALTURA_GEO,
+	);
 	const OFFSET_X = (LARGURA_GEO_BASE - LARGURA_GEO * ESCALA) / 2;
 	const OFFSET_Y = (ALTURA_GEO_BASE - ALTURA_GEO * ESCALA) / 2;
 
@@ -77,11 +79,12 @@ export default function HeatmapEstacoes({
 		const chave = `${cel.col},${cel.lin}`;
 		let c = mapa.get(chave);
 		if (!c) {
-			c = { col: cel.col, lin: cel.lin, valores: [], nomes: [] };
+			c = { col: cel.col, lin: cel.lin, valores: [], nomes: [], estacoes: [] };
 			mapa.set(chave, c);
 		}
 		c.valores.push(e.somaMm);
 		c.nomes.push(e.nomeEstacao);
+		c.estacoes.push(e);
 	}
 
 	const celulas = Array.from(mapa.values()).map((c) => ({
@@ -100,20 +103,36 @@ export default function HeatmapEstacoes({
 	const x = (col: number) => OFFSET_X + col * CELULA_LARGURA;
 	const y = (lin: number) => OFFSET_Y + lin * CELULA_ALTURA;
 
+	let minCol = COLUNAS, maxCol = 0;
+	let minLin = LINHAS, maxLin = 0;
+	celulas.forEach((c) => {
+		if (c.col < minCol) minCol = c.col;
+		if (c.col > maxCol) maxCol = c.col;
+		if (c.lin < minLin) minLin = c.lin;
+		if (c.lin > maxLin) maxLin = c.lin;
+	});
+
+	const viewBoxX = compacto ? x(minCol) : 0;
+	const viewBoxY = compacto ? y(minLin) : y(minLin) - CELULA_ALTURA * 0.5;
+
+	const viewBoxW = compacto
+		? x(maxCol) - viewBoxX + CELULA_LARGURA
+		: LARGURA_GEO_BASE;
+
+	const viewBoxH = compacto
+		? y(maxLin) - viewBoxY + CELULA_ALTURA
+		: y(maxLin) + CELULA_ALTURA - viewBoxY + CELULA_ALTURA * 0.5;
+
 	return (
 		<figure className="m-0 flex flex-col gap-3 rounded-2xl bg-soft p-4">
-			{/* 
-				O segredo está aqui: definimos uma altura fixa ou min-h para o container.
-				O svg vai preencher 100% e cortar o excesso com "slice"
-			*/}
-			<div 
+			<div
 				className={`w-full overflow-hidden rounded-xl bg-bg ${
-					compacto ? "h-[220px]" : "h-[320px] sm:h-[400px]"
+					compacto ? "h-[280px]" : "h-[400px]"
 				}`}
 			>
 				<svg
-					viewBox={`0 0 ${LARGURA_GEO_BASE} ${ALTURA_GEO_BASE}`}
-					preserveAspectRatio="xMidYMid slice"
+					viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxW} ${viewBoxH}`}
+					preserveAspectRatio="xMidYMid meet"
 					className="w-full h-full"
 					role="img"
 					aria-label={`Heatmap de ${estacoes.length} estações`}
@@ -141,6 +160,8 @@ export default function HeatmapEstacoes({
 									stroke="#fff"
 									strokeWidth={0.5}
 									opacity={preenchido ? 1 : 0.6}
+									onClick={() => cel && setCelulaSelecionada(cel)}
+									className={cel ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}
 								>
 									{cel ? (
 										<title>
@@ -160,7 +181,7 @@ export default function HeatmapEstacoes({
 										textAnchor="middle"
 										dominantBaseline="middle"
 										className={`fill-ink-primary font-medium pointer-events-none ${
-											compacto ? "text-[14px]" : "text-[10px]"
+											compacto ? "text-[14px]" : "text-[12px]"
 										}`}
 									>
 										{media!.toFixed(0)}
@@ -177,13 +198,12 @@ export default function HeatmapEstacoes({
 					<p className="m-0">
 						<span className="font-semibold text-ink-secondary">Cada célula</span>{" "}
 						agrega as estações que caem nela. A <strong>cor</strong> indica a média de
-						chuva no mês (mm); células claras não têm estação com leitura.
+						chuva no mês (mm); células claras não têm estação com leitura. Clique numa
+						célula para ver detalhes.
 					</p>
-
 					<p className="m-0 text-[12px] text-ink-secondary">
 						{estacoes.length} estações · {celulas.length} células com leitura
 					</p>
-
 					<div className="flex flex-wrap items-center gap-2 mt-2">
 						<span className="text-ink-secondary">Escala (mm):</span>
 						{CORTES_SOMA_MM.map((corte) => (
@@ -204,6 +224,14 @@ export default function HeatmapEstacoes({
 						</span>
 					</div>
 				</figcaption>
+			)}
+
+			{celulaSelecionada && (
+				<ModalEstacoes
+					titulo="Estações da Célula"
+					estacoes={celulaSelecionada.estacoes}
+					onFechar={() => setCelulaSelecionada(null)}
+				/>
 			)}
 		</figure>
 	);
