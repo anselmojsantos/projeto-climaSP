@@ -1,0 +1,1 @@
+export { default } from "./ui/cemaden-mensal/CemadenMensal";

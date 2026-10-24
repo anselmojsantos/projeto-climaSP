@@ -1,0 +1,66 @@
+ESTRATÉGIA DE PROJEÇÃO DE CHUVA — SÃO PAULO
+=============================================
+
+Objetivo
+--------
+Projetar a chuva da estação chuvosa 2026/27 (DJF) para São Paulo,
+por zona (Sul, Leste, Norte, Oeste, Centro).
+
+A estratégia, em 4 linhas
+-------------------------
+1. Medir o passado: chuva de São Paulo, 1961-2025 (INMET, um ponto).
+2. Pegar os anos parecidos: os 9 análogos de El Niño já selecionados.
+3. Projetar: o que choveu no verão (DJF) desses 9 anos -> faixa provável
+   para 2026/27.
+4. Distribuir na cidade: razões por zona (CEMADEN, 2013+) e monitorar
+   em tempo real.
+
+Papel de cada fonte
+-------------------
+- INMET 83781 (Mirante de Santana), diário, 1961-2025: série longa,
+  base da climatologia e dos compostos por análogo. É um único ponto,
+  então a projeção sai para a cidade como um todo.
+- INMET A701 (Mirante automática), horário, 2026: fecha o ano corrente
+  (dados até 30/09/2026 no zip de 2026).
+- CEMADEN, 2013+: NÃO entra na projeção histórica (13 anos é pouco e há
+  lacunas). Entra para:
+  a) desagregar a projeção da cidade entre as zonas, usando as razões
+     históricas entre cada zona e o Mirante (idealmente por estação do
+     ano);
+  b) monitoramento/nowcast (intensidade e acumulados de 24/72 h);
+  c) validação da projeção contra o observado nas zonas.
+- NASA POWER / CHIRPS: apenas para preencher lacunas, com correção.
+  Não usar para totais absolutos (teste deu 234 mm em ago-set na
+  capital, muito acima da climatologia).
+
+Ressalvas
+---------
+- O snapshot CEMADEN disponível (2026-08-28 a 2026-09-15, 19 dias,
+  ~6 leituras por série) serve só para provar que o ETL funciona;
+  não é dado analítico.
+- CEMADEN tem estações desiguais por zona: Sul 23, Leste 18, Norte 9,
+  Oeste 6, Centro 2. A média do Centro é frágil e precisa de ressalva.
+- `hydrobr`/ANA está defasado (o notebook chama prec_data sem período e
+  sem validar o intervalo retornado). Por isso a série longa vem
+  direto do INMET, não do hydrobr.
+- CSVs do INMET: Latin-1, separador ';', decimal vírgula, horário UTC
+  (dia local = UTC-3).
+
+Passo 1 — montar e validar a série de chuva de SP
+-------------------------------------------------
+- Baixar do INMET: BDMEP da estação 83781 (Mirante), diário,
+  1961-2025; e o zip de 2026 (A701) para fechar o ano corrente.
+- Converter para totais diários -> mensais -> sazonais
+  (DJF, MAM, JJA, SON), em horário local (UTC-3).
+- Validar: cobertura de dias válidos por ano, nenhum ano faltante, e
+  sanidade contra anos conhecidos (2014 seco, 2023 úmido).
+- Entregar: df_chuva_diaria, df_chuva_mensal e um relatório curto de
+  lacunas.
+- Critério de aceite: 1961-2025 sem ano faltante e cobertura diária
+  >= 90%.
+
+Próximos passos (depois do Passo 1)
+-----------------------------------
+- Passo 2: cruzar os totais de DJF com os 9 anos análogos de El Niño.
+- Passo 3: montar a faixa de projeção (min-max/quartis) para 2026/27.
+- Passo 4: desagregar por zona com as razões do CEMADEN (2013+).

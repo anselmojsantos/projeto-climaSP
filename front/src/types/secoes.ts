@@ -18,8 +18,8 @@ export const SECOES: Secao[] = [
   },
   {
     slug: "menu-3",
-    menu: "Menu-3",
-    titulo: "Menu-3",
+    menu: "Dados Cemaden",
+    titulo: "Dados Cemaden",
   },
   {
     slug: "menu-4",

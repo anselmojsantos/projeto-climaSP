@@ -1,8 +1,12 @@
 ---
 import Base from "../layouts/Base.astro";
+import Cemaden from "../components/cemaden/mapa"
 import { SECOES } from "../types/secoes";
 
+const baseApi = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3333";
 const titulo = SECOES.find((secao) => secao.slug === "menu-3")!.titulo;
 ---
 
-<Base titulo={titulo} />
+<Base titulo={titulo}>
+  <Cemaden client:load baseApi={baseApi} />
+</Base>
