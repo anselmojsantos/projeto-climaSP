@@ -5,12 +5,13 @@ import { BOUNDS_SP, CORTES_SOMA_MM, RAIO_MAX, RAIO_MIN } from "../../model/limia
 import { CONTORNO_SP } from "../../model/contorno-sp";
 import type { Estacao } from "../../model/types";
 
-const LARGURA = 380;
-const ALTURA = 420;
+const LARGURA_BASE = 380;
+const ALTURA_BASE = 420;
 const MARGEM = { topo: 16, direita: 16, base: 32, esquerda: 16 };
+const ASPECT_RATIO = LARGURA_BASE / ALTURA_BASE;
 
-const LARGURA_PLOT = LARGURA - MARGEM.esquerda - MARGEM.direita;
-const ALTURA_PLOT = ALTURA - MARGEM.topo - MARGEM.base;
+const LARGURA_PLOT = LARGURA_BASE - MARGEM.esquerda - MARGEM.direita;
+const ALTURA_PLOT = ALTURA_BASE - MARGEM.topo - MARGEM.base;
 
 const LAT_MEDIA = (BOUNDS_SP.latMin + BOUNDS_SP.latMax) / 2;
 const COS_LAT_MEDIA = Math.cos((LAT_MEDIA * Math.PI) / 180);
@@ -22,6 +23,7 @@ const OFFSET_Y = MARGEM.topo + (ALTURA_PLOT - ALTURA_GEO * ESCALA) / 2;
 
 interface Props {
 	estacoes: Estacao[];
+	responsivo?: boolean;
 }
 
 function projetar(estacao: Estacao): { x: number; y: number } | null {

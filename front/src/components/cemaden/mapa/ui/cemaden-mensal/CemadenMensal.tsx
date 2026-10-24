@@ -183,7 +183,7 @@ export default function CemadenMensal({ baseApi }: Props) {
 						<Kpi rotulo="Chuva(h)" valor={String(estado.estacoesComChuva)} />
 					</div>
 
-					<HeatmapEstacoes estacoes={estado.estacoes} />
+					<HeatmapEstacoes estacoes={estado.estacoes} responsivo />
 
 					{serie.fase === "ocioso" && meses.fase === "ok" && (
 						<button

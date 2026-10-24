@@ -10,30 +10,38 @@ import {
 import type { Estacao } from "../../model/types";
 
 const MARGEM = { topo: 8, direita: 8, base: 16, esquerda: 8 };
+const ASPECT_RATIO = 380 / 420; // largura / altura base
 
 interface Props {
 	estacoes: Estacao[];
 	largura?: number;
 	altura?: number;
 	compacto?: boolean;
+	responsivo?: boolean;
 }
 
 interface Celula {
 	col: number;
 	lin: number;
 	valores: number[];
+	nomes: string[];
 }
 
-function celulaDe(lat: number, lon: number): { col: number; lin: number } | null {
+function celulaDe(
+	lat: number,
+	lon: number,
+	colunas: number,
+	linhas: number,
+): { col: number; lin: number } | null {
 	const { latMin, latMax, lonMin, lonMax } = BOUNDS_SP;
 	if (lat < latMin || lat > latMax || lon < lonMin || lon > lonMax) return null;
 	const col = Math.min(
-		HEATMAP_COLUNAS - 1,
-		Math.floor(((lon - lonMin) / (lonMax - lonMin)) * HEATMAP_COLUNAS),
+		colunas - 1,
+		Math.floor(((lon - lonMin) / (lonMax - lonMin)) * colunas),
 	);
 	const lin = Math.min(
-		HEATMAP_LINHAS - 1,
-		Math.floor(((latMax - lat) / (latMax - latMin)) * HEATMAP_LINHAS),
+		linhas - 1,
+		Math.floor(((latMax - lat) / (latMax - latMin)) * linhas),
 	);
 	return { col, lin };
 }
@@ -43,9 +51,15 @@ export default function HeatmapEstacoes({
 	largura = 380,
 	altura = 420,
 	compacto = false,
+	responsivo = false,
 }: Props) {
-	const LARGURA_PLOT = largura - MARGEM.esquerda - MARGEM.direita;
-	const ALTURA_PLOT = altura - MARGEM.topo - MARGEM.base;
+	const LARGURA_EFETIVA = responsivo ? "100%" : largura;
+	const ALTURA_EFETIVA = responsivo ? `calc(100% / ${ASPECT_RATIO})` : altura;
+
+	const LARGURA_BASE = 380;
+	const ALTURA_BASE = 420;
+	const LARGURA_PLOT = LARGURA_BASE - MARGEM.esquerda - MARGEM.direita;
+	const ALTURA_PLOT = ALTURA_BASE - MARGEM.topo - MARGEM.base;
 
 	const LAT_MEDIA = (BOUNDS_SP.latMin + BOUNDS_SP.latMax) / 2;
 	const COS_LAT_MEDIA = Math.cos((LAT_MEDIA * Math.PI) / 180);
@@ -55,22 +69,27 @@ export default function HeatmapEstacoes({
 	const OFFSET_X = MARGEM.esquerda + (LARGURA_PLOT - LARGURA_GEO * ESCALA) / 2;
 	const OFFSET_Y = MARGEM.topo + (ALTURA_PLOT - ALTURA_GEO * ESCALA) / 2;
 
-	const CELULA_LARGURA = (LARGURA_GEO * ESCALA) / HEATMAP_COLUNAS;
-	const CELULA_ALTURA = (ALTURA_GEO * ESCALA) / HEATMAP_LINHAS;
+	// Grade adaptativa: no compacto, menos células → células maiores
+	const COLUNAS = compacto ? 8 : HEATMAP_COLUNAS;
+	const LINHAS = compacto ? 10 : HEATMAP_LINHAS;
+
+	const CELULA_LARGURA = (LARGURA_GEO * ESCALA) / COLUNAS;
+	const CELULA_ALTURA = (ALTURA_GEO * ESCALA) / LINHAS;
 
 	const mapa = new Map<string, Celula>();
 	for (const e of estacoes) {
 		if (e.latitude === null || e.longitude === null) continue;
 		if (e.somaMm === null || !Number.isFinite(e.somaMm)) continue;
-		const cel = celulaDe(e.latitude, e.longitude);
+		const cel = celulaDe(e.latitude, e.longitude, COLUNAS, LINHAS);
 		if (!cel) continue;
 		const chave = `${cel.col},${cel.lin}`;
 		let c = mapa.get(chave);
 		if (!c) {
-			c = { col: cel.col, lin: cel.lin, valores: [] };
+			c = { col: cel.col, lin: cel.lin, valores: [], nomes: [] };
 			mapa.set(chave, c);
 		}
 		c.valores.push(e.somaMm);
+		c.nomes.push(e.nomeEstacao);
 	}
 
 	const celulas = Array.from(mapa.values()).map((c) => ({
@@ -91,57 +110,91 @@ export default function HeatmapEstacoes({
 
 	return (
 		<figure className="m-0 flex flex-col gap-3 rounded-2xl bg-soft p-4">
-			<div className="w-full">
-				<svg
-					viewBox={`0 0 ${largura} ${altura}`}
-					className="mx-auto block h-auto w-full"
-					role="img"
-					aria-label={`Heatmap de ${estacoes.length} estações do CEMADEN em São Paulo, agregadas em ${HEATMAP_COLUNAS}×${HEATMAP_LINHAS} células, coloridas pela média de chuva no mês.`}
+			<div
+				className="w-full"
+				style={
+					{
+						"--heatmap-width": LARGURA_EFETIVA,
+						"--heatmap-height": ALTURA_EFETIVA,
+					} as React.CSSProperties
+				}
+			>
+				<div
+					className={responsivo ? "relative w-full" : "w-full"}
+					style={
+						responsivo
+							? { width: "100%", aspectRatio: ASPECT_RATIO }
+							: undefined
+					}
 				>
-					<rect
-						x={MARGEM.esquerda}
-						y={MARGEM.topo}
-						width={LARGURA_PLOT}
-						height={ALTURA_PLOT}
-						className="fill-bg stroke-data-neutral/20"
-						strokeWidth={1}
-					/>
+					<svg
+						viewBox={`0 0 ${LARGURA_BASE} ${ALTURA_BASE}`}
+						className="w-full h-full"
+						role="img"
+						aria-label={`Heatmap de ${estacoes.length} estações do CEMADEN em São Paulo, agregadas em ${COLUNAS}×${LINHAS} células (${celulas.length} células com leitura), coloridas pela média de chuva no mês.`}
+					>
+						<rect
+							x={MARGEM.esquerda}
+							y={MARGEM.topo}
+							width={LARGURA_PLOT}
+							height={ALTURA_PLOT}
+							className="fill-bg stroke-data-neutral/20"
+							strokeWidth={1}
+						/>
 
-					{Array.from({ length: HEATMAP_LINHAS * HEATMAP_COLUNAS }).map((_, i) => {
-						const col = i % HEATMAP_COLUNAS;
-						const lin = Math.floor(i / HEATMAP_COLUNAS);
-						const cel = mapa.get(`${col},${lin}`);
-						const preenchido = !!cel;
-						const cor = cel
-							? corPorSoma(
-									cel.valores.reduce((s, v) => s + v, 0) / cel.valores.length,
-									CORTES_SOMA_MM,
-								)
-							: COR_CELULA_VAZIA;
-						return (
-							<rect
-								key={`${col}-${lin}`}
-								x={x(col)}
-								y={y(lin)}
-								width={CELULA_LARGURA}
-								height={CELULA_ALTURA}
-								fill={cor}
-								stroke="#fff"
-								strokeWidth={0.5}
-								opacity={preenchido ? 1 : 0.6}
-							>
-								{cel && (
-									<title>
-										{`${cel.valores.length} estação(ões) · média ${formatarNumero(
-											cel.valores.reduce((s, v) => s + v, 0) / cel.valores.length,
-											1,
-										)} mm`}
-									</title>
-								)}
-							</rect>
-						);
-					})}
-				</svg>
+						{Array.from({ length: LINHAS * COLUNAS }).map((_, i) => {
+							const col = i % COLUNAS;
+							const lin = Math.floor(i / COLUNAS);
+							const cel = mapa.get(`${col},${lin}`);
+							const preenchido = !!cel;
+							const media = cel
+								? cel.valores.reduce((s, v) => s + v, 0) / cel.valores.length
+								: null;
+							const cor = cel
+								? corPorSoma(media!, CORTES_SOMA_MM)
+								: COR_CELULA_VAZIA;
+
+							return (
+								<g key={`${col}-${lin}`}>
+									<rect
+										x={x(col)}
+										y={y(lin)}
+										width={CELULA_LARGURA}
+										height={CELULA_ALTURA}
+										fill={cor}
+										stroke="#fff"
+										strokeWidth={0.5}
+										opacity={preenchido ? 1 : 0.6}
+									>
+										{cel ? (
+											<title>
+												{`${cel.valores.length} ${
+													cel.valores.length === 1 ? "estação" : "estações"
+												} · média ${formatarNumero(media, 1)} mm\n${cel.nomes.join(
+													" · ",
+												)}`}
+											</title>
+										) : (
+											<title>Sem estação com leitura</title>
+										)}
+									</rect>
+
+									{cel && CELULA_LARGURA > (compacto ? 12 : 20) && (
+										<text
+											x={x(col) + CELULA_LARGURA / 2}
+											y={y(lin) + CELULA_ALTURA / 2}
+											textAnchor="middle"
+											dominantBaseline="middle"
+											className="fill-ink-primary text-[6px] font-medium pointer-events-none"
+										>
+											{media!.toFixed(0)}
+										</text>
+									)}
+								</g>
+							);
+						})}
+					</svg>
+				</div>
 			</div>
 
 			{!compacto && (
@@ -150,6 +203,10 @@ export default function HeatmapEstacoes({
 						<span className="font-semibold text-ink-secondary">Cada célula</span>{" "}
 						agrega as estações que caem nela. A <strong>cor</strong> indica a média de
 						chuva no mês (mm); células claras não têm estação com leitura.
+					</p>
+
+					<p className="m-0 text-[12px] text-ink-secondary">
+						{estacoes.length} estações · {celulas.length} células com leitura
 					</p>
 
 					<div className="flex flex-wrap items-center gap-2">
