@@ -38,7 +38,7 @@ export default function SmallMultiplesMensal({ meses, porMes }: Props) {
 				Padrão espacial da chuva por mês
 			</h3>
 
-			<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
 				{meses.map((periodo) => (
 					<div key={periodo} className="flex flex-col gap-1">
 						<p className="m-0 text-center text-[12px] font-semibold text-ink-secondary">
@@ -49,15 +49,13 @@ export default function SmallMultiplesMensal({ meses, porMes }: Props) {
 						</p>
 						<HeatmapEstacoes
 							estacoes={porMes[periodo] ?? []}
-							largura={180}
-							altura={200}
 							compacto
 						/>
 					</div>
 				))}
 			</div>
 
-			<figcaption className="flex flex-wrap items-center gap-2 text-[12px] text-data-neutral">
+			<figcaption className="flex flex-wrap items-center gap-2 text-[12px] text-data-neutral mt-2">
 				<span className="text-ink-secondary">Escala (mm):</span>
 				{CORTES_SOMA_MM.map((corte) => (
 					<span key={corte} className="flex items-center gap-1">

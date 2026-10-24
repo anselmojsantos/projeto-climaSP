@@ -9,15 +9,12 @@ import {
 } from "../../model/limiares";
 import type { Estacao } from "../../model/types";
 
-const MARGEM = { topo: 8, direita: 8, base: 16, esquerda: 8 };
-const ASPECT_RATIO = 380 / 420; // largura / altura base
+// Mudei as margens para 0, assim o gráfico encosta nas bordas
+const MARGEM = { topo: 0, direita: 0, base: 0, esquerda: 0 };
 
 interface Props {
 	estacoes: Estacao[];
-	largura?: number;
-	altura?: number;
 	compacto?: boolean;
-	responsivo?: boolean;
 }
 
 interface Celula {
@@ -27,51 +24,55 @@ interface Celula {
 	nomes: string[];
 }
 
-function celulaDe(lat: number, lon: number): { col: number; lin: number } | null {
+function celulaDe(
+	lat: number,
+	lon: number,
+	colunas: number,
+	linhas: number,
+): { col: number; lin: number } | null {
 	const { latMin, latMax, lonMin, lonMax } = BOUNDS_SP;
 	if (lat < latMin || lat > latMax || lon < lonMin || lon > lonMax) return null;
 	const col = Math.min(
-		HEATMAP_COLUNAS - 1,
-		Math.floor(((lon - lonMin) / (lonMax - lonMin)) * HEATMAP_COLUNAS),
+		colunas - 1,
+		Math.floor(((lon - lonMin) / (lonMax - lonMin)) * colunas),
 	);
 	const lin = Math.min(
-		HEATMAP_LINHAS - 1,
-		Math.floor(((latMax - lat) / (latMax - latMin)) * HEATMAP_LINHAS),
+		linhas - 1,
+		Math.floor(((latMax - lat) / (latMax - latMin)) * linhas),
 	);
 	return { col, lin };
 }
 
 export default function HeatmapEstacoes({
 	estacoes,
-	largura = 380,
-	altura = 420,
 	compacto = false,
-	responsivo = false,
 }: Props) {
-	const LARGURA_EFETIVA = responsivo ? "100%" : largura;
-	const ALTURA_EFETIVA = responsivo ? `calc(100% / ${ASPECT_RATIO})` : altura;
+	// Dimensões base do desenho (o espaço real de SP)
+	const LARGURA_GEO_BASE = 300;
+	const ALTURA_GEO_BASE = 400;
 
-	const LARGURA_BASE = 380;
-	const ALTURA_BASE = 420;
-	const LARGURA_PLOT = LARGURA_BASE - MARGEM.esquerda - MARGEM.direita;
-	const ALTURA_PLOT = ALTURA_BASE - MARGEM.topo - MARGEM.base;
+	// Quantidade de células
+	const COLUNAS = compacto ? 6 : HEATMAP_COLUNAS;
+	const LINHAS = compacto ? 8 : HEATMAP_LINHAS;
 
+	// Escala e posição
 	const LAT_MEDIA = (BOUNDS_SP.latMin + BOUNDS_SP.latMax) / 2;
 	const COS_LAT_MEDIA = Math.cos((LAT_MEDIA * Math.PI) / 180);
 	const LARGURA_GEO = (BOUNDS_SP.lonMax - BOUNDS_SP.lonMin) * COS_LAT_MEDIA;
 	const ALTURA_GEO = BOUNDS_SP.latMax - BOUNDS_SP.latMin;
-	const ESCALA = Math.min(LARGURA_PLOT / LARGURA_GEO, ALTURA_PLOT / ALTURA_GEO);
-	const OFFSET_X = MARGEM.esquerda + (LARGURA_PLOT - LARGURA_GEO * ESCALA) / 2;
-	const OFFSET_Y = MARGEM.topo + (ALTURA_PLOT - ALTURA_GEO * ESCALA) / 2;
+	
+	const ESCALA = Math.min(LARGURA_GEO_BASE / LARGURA_GEO, ALTURA_GEO_BASE / ALTURA_GEO);
+	const OFFSET_X = (LARGURA_GEO_BASE - LARGURA_GEO * ESCALA) / 2;
+	const OFFSET_Y = (ALTURA_GEO_BASE - ALTURA_GEO * ESCALA) / 2;
 
-	const CELULA_LARGURA = (LARGURA_GEO * ESCALA) / HEATMAP_COLUNAS;
-	const CELULA_ALTURA = (ALTURA_GEO * ESCALA) / HEATMAP_LINHAS;
+	const CELULA_LARGURA = (LARGURA_GEO * ESCALA) / COLUNAS;
+	const CELULA_ALTURA = (ALTURA_GEO * ESCALA) / LINHAS;
 
 	const mapa = new Map<string, Celula>();
 	for (const e of estacoes) {
 		if (e.latitude === null || e.longitude === null) continue;
 		if (e.somaMm === null || !Number.isFinite(e.somaMm)) continue;
-		const cel = celulaDe(e.latitude, e.longitude);
+		const cel = celulaDe(e.latitude, e.longitude, COLUNAS, LINHAS);
 		if (!cel) continue;
 		const chave = `${cel.col},${cel.lin}`;
 		let c = mapa.get(chave);
@@ -101,92 +102,74 @@ export default function HeatmapEstacoes({
 
 	return (
 		<figure className="m-0 flex flex-col gap-3 rounded-2xl bg-soft p-4">
-			<div
-				className="w-full"
-				style={
-					{
-						"--heatmap-width": LARGURA_EFETIVA,
-						"--heatmap-height": ALTURA_EFETIVA,
-					} as React.CSSProperties
-				}
+			{/* 
+				O segredo está aqui: definimos uma altura fixa ou min-h para o container.
+				O svg vai preencher 100% e cortar o excesso com "slice"
+			*/}
+			<div 
+				className={`w-full overflow-hidden rounded-xl bg-bg ${
+					compacto ? "h-[220px]" : "h-[320px] sm:h-[400px]"
+				}`}
 			>
-				<div
-					className={responsivo ? "relative w-full" : "w-full"}
-					style={
-						responsivo
-							? { width: "100%", aspectRatio: ASPECT_RATIO }
-							: undefined
-					}
+				<svg
+					viewBox={`0 0 ${LARGURA_GEO_BASE} ${ALTURA_GEO_BASE}`}
+					preserveAspectRatio="xMidYMid slice"
+					className="w-full h-full"
+					role="img"
+					aria-label={`Heatmap de ${estacoes.length} estações`}
 				>
-					<svg
-						viewBox={`0 0 ${LARGURA_BASE} ${ALTURA_BASE}`}
-						className="w-full h-full"
-						role="img"
-						aria-label={`Heatmap de ${estacoes.length} estações do CEMADEN em São Paulo, agregadas em ${HEATMAP_COLUNAS}×${HEATMAP_LINHAS} células (${celulas.length} células com leitura), coloridas pela média de chuva no mês.`}
-					>
-						<rect
-							x={MARGEM.esquerda}
-							y={MARGEM.topo}
-							width={LARGURA_PLOT}
-							height={ALTURA_PLOT}
-							className="fill-bg stroke-data-neutral/20"
-							strokeWidth={1}
-						/>
+					{Array.from({ length: LINHAS * COLUNAS }).map((_, i) => {
+						const col = i % COLUNAS;
+						const lin = Math.floor(i / COLUNAS);
+						const cel = mapa.get(`${col},${lin}`);
+						const preenchido = !!cel;
+						const media = cel
+							? cel.valores.reduce((s, v) => s + v, 0) / cel.valores.length
+							: null;
+						const cor = cel
+							? corPorSoma(media!, CORTES_SOMA_MM)
+							: COR_CELULA_VAZIA;
 
-						{Array.from({ length: HEATMAP_LINHAS * HEATMAP_COLUNAS }).map(
-							(_, i) => {
-								const col = i % HEATMAP_COLUNAS;
-								const lin = Math.floor(i / HEATMAP_COLUNAS);
-								const cel = mapa.get(`${col},${lin}`);
-								const preenchido = !!cel;
-								const media = cel
-									? cel.valores.reduce((s, v) => s + v, 0) / cel.valores.length
-									: null;
-								const cor = cel
-									? corPorSoma(media!, CORTES_SOMA_MM)
-									: COR_CELULA_VAZIA;
+						return (
+							<g key={`${col}-${lin}`}>
+								<rect
+									x={x(col)}
+									y={y(lin)}
+									width={CELULA_LARGURA}
+									height={CELULA_ALTURA}
+									fill={cor}
+									stroke="#fff"
+									strokeWidth={0.5}
+									opacity={preenchido ? 1 : 0.6}
+								>
+									{cel ? (
+										<title>
+											{`${cel.valores.length} ${
+												cel.valores.length === 1 ? "estação" : "estações"
+											} · média ${formatarNumero(media, 1)} mm\n${cel.nomes.join(" · ")}`}
+										</title>
+									) : (
+										<title>Sem estação com leitura</title>
+									)}
+								</rect>
 
-								return (
-									<g key={`${col}-${lin}`}>
-										<rect
-											x={x(col)}
-											y={y(lin)}
-											width={CELULA_LARGURA}
-											height={CELULA_ALTURA}
-											fill={cor}
-											stroke="#fff"
-											strokeWidth={0.5}
-											opacity={preenchido ? 1 : 0.6}
-										>
-											{cel ? (
-												<title>
-													{`${cel.valores.length} estação(ões) · média ${formatarNumero(
-														media,
-														1,
-													)} mm\n${cel.nomes.join(" · ")}`}
-												</title>
-											) : (
-												<title>Sem estação com leitura</title>
-											)}
-										</rect>
-
-										{cel && CELULA_LARGURA > 20 && (
-											<text
-												x={x(col) + CELULA_LARGURA / 2}
-												y={y(lin) + CELULA_ALTURA / 2}
-												textAnchor="middle"
-												dominantBaseline="middle"
-												className="fill-ink-primary text-[6px] font-medium pointer-events-none"
-											>
-												{media!.toFixed(0)}
-											</text>
-										)}
-									</g>
-								);
-							},
-						)}
-					</svg>
-				</div>
+								{cel && (
+									<text
+										x={x(col) + CELULA_LARGURA / 2}
+										y={y(lin) + CELULA_ALTURA / 2}
+										textAnchor="middle"
+										dominantBaseline="middle"
+										className={`fill-ink-primary font-medium pointer-events-none ${
+											compacto ? "text-[14px]" : "text-[10px]"
+										}`}
+									>
+										{media!.toFixed(0)}
+									</text>
+								)}
+							</g>
+						);
+					})}
+				</svg>
 			</div>
 
 			{!compacto && (
@@ -201,7 +184,7 @@ export default function HeatmapEstacoes({
 						{estacoes.length} estações · {celulas.length} células com leitura
 					</p>
 
-					<div className="flex flex-wrap items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2 mt-2">
 						<span className="text-ink-secondary">Escala (mm):</span>
 						{CORTES_SOMA_MM.map((corte) => (
 							<span key={corte} className="flex items-center gap-1">
