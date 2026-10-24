@@ -38,7 +38,7 @@ export default function SmallMultiplesMensal({ meses, porMes }: Props) {
 				Padrão espacial da chuva por mês
 			</h3>
 
-			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+			<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
 				{meses.map((periodo) => (
 					<div key={periodo} className="flex flex-col gap-1">
 						<p className="m-0 text-center text-[12px] font-semibold text-ink-secondary">
