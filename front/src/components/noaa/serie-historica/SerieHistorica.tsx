@@ -10,7 +10,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { LIMIARES } from "../model/limiares";
+import { LIMIAR_EL_NINO, LIMIAR_LA_NINA } from "../model/limiares";
+
+const LIMIARES = { elNino: LIMIAR_EL_NINO, laNina: LIMIAR_LA_NINA };
 import type {
   EstadoSerieHistorica,
   Props,
