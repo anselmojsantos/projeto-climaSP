@@ -1,4 +1,14 @@
 import { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { PALETA } from "./model/paleta";
 import type { EstadoAnalogos, Props, RespostaAnalogos } from "./model/types";
 
 export default function Analogos2026({ baseApi }: Props) {
@@ -39,6 +49,20 @@ export default function Analogos2026({ baseApi }: Props) {
 
   const totalAnalogos = estado.fase === "ok" ? estado.analogos.length : null;
 
+  const dadosGrafico =
+    estado.fase === "ok"
+      ? estado.temporadas.map((temporada, idx) => {
+          const linha: Record<string, number | null | string> = { temporada };
+          linha["Alvo 2026"] = estado.alvo[idx] ?? null;
+          linha["Média análogos"] = estado.media[idx] ?? null;
+          estado.analogos.forEach((analogo) => {
+            if (analogo.ano === null) return;
+            linha[String(analogo.ano)] = analogo.valores[idx] ?? null;
+          });
+          return linha;
+        })
+      : [];
+
   return (
     <section aria-labelledby="analogos-2026">
       <p className="m-0 mb-1 text-[11px] uppercase tracking-wide text-ink-secondary">
@@ -65,17 +89,41 @@ export default function Analogos2026({ baseApi }: Props) {
       )}
 
       {estado.fase === "ok" && (
-        <div className="mt-5">
-          <p className="text-[14px] text-ink-secondary">Gráfico (refatorado)</p>
-          {/*
-          <GraficoAnalogos
-            temporadas={estado.temporadas}
-            alvo={estado.alvo}
-            media={estado.media}
-            candidatos={estado.candidatos}
-            analogos={estado.analogos}
-          />
-          */}
+        <div className="mt-5 h-[320px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dadosGrafico} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="4 4" stroke="rgba(15,23,42,0.08)" />
+              <XAxis dataKey="temporada" tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }} />
+              <YAxis
+                tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }}
+                tickFormatter={(v) => `${v > 0 ? "+" : ""}${v.toFixed(1)} °C`}
+              />
+              <Tooltip
+                contentStyle={{ borderRadius: 12, border: "1px solid rgba(15,23,42,0.08)" }}
+                formatter={(value: number) => [`${value > 0 ? "+" : ""}${value.toFixed(2)} °C`, ""]}
+              />
+              <Line type="monotone" dataKey="Alvo 2026" stroke="#111827" strokeWidth={2.5} dot={false} />
+              <Line
+                type="monotone"
+                dataKey="Média análogos"
+                stroke="#dc2626"
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                dot={false}
+              />
+              {estado.analogos.map((analogo, idx) => (
+                <Line
+                  key={analogo.ano ?? idx}
+                  type="monotone"
+                  dataKey={String(analogo.ano)}
+                  stroke={PALETA[idx % PALETA.length]}
+                  strokeWidth={1.6}
+                  dot={false}
+                  connectNulls
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       )}
     </section>

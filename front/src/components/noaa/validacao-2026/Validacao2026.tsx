@@ -1,4 +1,14 @@
 import { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  ResponsiveContainer,
+  Scatter,
+  ScatterChart,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { ajustarReta } from "./lib/regressao";
 import type {
   EstadoValidacao,
@@ -70,8 +80,6 @@ export default function Validacao2026({ baseApi }: Props) {
     });
   }
 
-  const aso2026 = estado.fase === "ok" ? estado.aso2026 : null;
-
   return (
     <section aria-labelledby="validacao-2026">
       <p className="m-0 mb-1 text-[11px] uppercase tracking-wide text-ink-secondary">
@@ -103,8 +111,45 @@ export default function Validacao2026({ baseApi }: Props) {
       )}
 
       {estado.fase === "ok" && series.length > 0 && (
-        <div className="mt-5">
-          <p className="text-[14px] text-ink-secondary">Gráfico (refatorado)</p>
+        <div className="mt-5 space-y-6">
+          {series.map((serie) => {
+            const retaDados = [
+              { x: Math.min(...serie.pontos.map((p) => p.aso)), y: serie.reta.a * Math.min(...serie.pontos.map((p) => p.aso)) + serie.reta.b },
+              { x: Math.max(...serie.pontos.map((p) => p.aso)), y: serie.reta.a * Math.max(...serie.pontos.map((p) => p.aso)) + serie.reta.b },
+            ];
+            return (
+              <div key={serie.temporada}>
+                <p className="mb-2 text-[13px] font-semibold text-ink">{serie.temporada}</p>
+                <div className="h-[280px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="4 4" stroke="rgba(15,23,42,0.08)" />
+                      <XAxis
+                        dataKey="aso"
+                        type="number"
+                        name="ASO"
+                        tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }}
+                        tickFormatter={(v) => `${v > 0 ? "+" : ""}${v.toFixed(1)}`}
+                      />
+                      <YAxis
+                        dataKey="valor"
+                        type="number"
+                        name={serie.temporada}
+                        tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }}
+                        tickFormatter={(v) => `${v > 0 ? "+" : ""}${v.toFixed(1)}`}
+                      />
+                      <Tooltip
+                        contentStyle={{ borderRadius: 12, border: "1px solid rgba(15,23,42,0.08)" }}
+                        formatter={(value: number) => [`${value > 0 ? "+" : ""}${value.toFixed(2)} °C`, ""]}
+                      />
+                      <Scatter data={serie.pontos} fill="#2563eb" />
+                      <Line data={retaDados} dataKey="y" stroke="#dc2626" strokeWidth={2} dot={false} />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </section>

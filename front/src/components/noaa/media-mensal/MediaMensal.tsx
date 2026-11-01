@@ -1,4 +1,14 @@
 import { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { CORES } from "./model/cores";
 import type {
   EstadoMediaMensal,
   Props,
@@ -65,15 +75,33 @@ export default function MediaMensal({ baseApi }: Props) {
       )}
 
       {estado.fase === "ok" && (
-        <div className="mt-5">
-          <p className="text-[14px] text-ink-secondary">Gráfico (refatorado)</p>
-          {/*
-          <GraficoMediaMensal
-            ano={estado.ano}
-            regioes={estado.regioes}
-            medias={estado.medias}
-          />
-          */}
+        <div className="mt-5 h-[320px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={estado.serie} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="4 4" stroke="rgba(15,23,42,0.08)" />
+              <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }} />
+              <YAxis
+                tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }}
+                tickFormatter={(v) => `${v > 0 ? "+" : ""}${v.toFixed(1)} °C`}
+              />
+              <Tooltip
+                contentStyle={{ borderRadius: 12, border: "1px solid rgba(15,23,42,0.08)" }}
+                formatter={(value: number) => [`${value > 0 ? "+" : ""}${value.toFixed(2)} °C`, ""]}
+              />
+              {estado.regioes.map((r) => (
+                <Line
+                  key={r.chave}
+                  type="monotone"
+                  dataKey={r.chave}
+                  name={r.nome}
+                  stroke={CORES[r.chave] ?? "#1f2937"}
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       )}
     </section>

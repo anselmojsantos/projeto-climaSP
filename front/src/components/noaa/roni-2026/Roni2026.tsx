@@ -1,4 +1,15 @@
 import { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { LIMIARES } from "../model/limiares";
 import type { EstadoRoni, Props, RespostaTemporadas } from "./model/types";
 
 export default function Roni2026({ baseApi }: Props) {
@@ -34,20 +45,15 @@ export default function Roni2026({ baseApi }: Props) {
     };
   }, [baseApi]);
 
-  const pontos =
+  const dados =
     estado.fase === "ok"
-      ? estado.temporadas.flatMap((temporada) =>
-          temporada.roni !== null
-            ? [
-                {
-                  temporada: temporada.temporada,
-                  roni: temporada.roni,
-                  fase: temporada.fase,
-                  origem: temporada.origem,
-                },
-              ]
-            : [],
-        )
+      ? estado.temporadas
+          .filter((t) => t.roni !== null)
+          .map((t) => ({
+            temporada: t.temporada,
+            roni: t.roni,
+            origem: t.origem,
+          }))
       : [];
 
   return (
@@ -77,8 +83,25 @@ export default function Roni2026({ baseApi }: Props) {
       )}
 
       {estado.fase === "ok" && (
-        <div className="mt-5">
-          <p className="text-[14px] text-ink-secondary">Gráfico (refatorado)</p>
+        <div className="mt-5 h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dados} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="4 4" stroke="rgba(15,23,42,0.08)" />
+              <XAxis dataKey="temporada" tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }} />
+              <YAxis
+                domain={[-1.5, 2.5]}
+                tick={{ fontSize: 11, fill: "var(--color-ink-secondary)" }}
+                tickFormatter={(v) => `${v > 0 ? "+" : ""}${v.toFixed(1)} °C`}
+              />
+              <ReferenceLine y={LIMIARES.elNino} stroke="#dc2626" strokeDasharray="4 4" />
+              <ReferenceLine y={LIMIARES.laNina} stroke="#2563eb" strokeDasharray="4 4" />
+              <Tooltip
+                contentStyle={{ borderRadius: 12, border: "1px solid rgba(15,23,42,0.08)" }}
+                formatter={(value: number) => [`${value > 0 ? "+" : ""}${value.toFixed(2)} °C`, "RONI"]}
+              />
+              <Line type="monotone" dataKey="roni" stroke="#111827" strokeWidth={2.5} dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       )}
     </section>
