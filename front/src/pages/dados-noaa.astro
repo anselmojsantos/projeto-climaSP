@@ -9,5 +9,5 @@ const titulo = rota.titulo;
 ---
 
 <Base titulo={titulo}>
-  <Noaa client:load baseApi={baseApi} />
+  <Noaa client:only="react" baseApi={baseApi} />
 </Base>
