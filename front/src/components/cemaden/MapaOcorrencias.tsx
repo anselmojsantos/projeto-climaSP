@@ -34,9 +34,14 @@ export default function MapaOcorrencias({ ocorrencias }: Props) {
 			if (!alvo) return;
 			if (mapaRef.current) return;
 
-			const { criarMapa } = await import("./lib/mapa");
+			const { criarMapa, desenharOcorrencias } = await import("./lib/mapa");
 			if (cancelado) return;
 			mapaRef.current = await criarMapa(alvo);
+
+			if (ocorrencias.length > 0) {
+				camadaRef.current?.remove();
+				camadaRef.current = await desenharOcorrencias(mapaRef.current, ocorrencias);
+			}
 
 			const id1 = window.requestAnimationFrame(() => {
 				try {
@@ -47,11 +52,17 @@ export default function MapaOcorrencias({ ocorrencias }: Props) {
 				try {
 					mapaRef.current?.invalidateSize();
 				} catch (e) {}
-			}, 100);
+			}, 50);
+			const id3 = window.setTimeout(() => {
+				try {
+					mapaRef.current?.invalidateSize();
+				} catch (e) {}
+			}, 150);
 
 			return () => {
 				window.cancelAnimationFrame(id1);
 				window.clearTimeout(id2);
+				window.clearTimeout(id3);
 			};
 		})();
 
