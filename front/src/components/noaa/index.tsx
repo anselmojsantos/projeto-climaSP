@@ -1,8 +1,8 @@
-import Analogos2026 from "./analogos-2026";
-import MediaMensal from "./media-mensal";
-import Roni2026 from "./roni-2026";
-import SerieHistorica from "./serie-historica";
-import Validacao2026 from "./validacao-2026";
+import Analogos2026 from "./analogos-2026/Analogos2026";
+import MediaMensal from "./media-mensal/MediaMensal";
+import Roni2026 from "./roni-2026/Roni2026";
+import SerieHistorica from "./serie-historica/SerieHistorica";
+import Validacao2026 from "./validacao-2026/Validacao2026";
 
 interface Props {
   baseApi: string;

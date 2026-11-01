@@ -27,10 +27,19 @@ export function formatarPercentual(valor: ValorNumerico | undefined): string {
 
 export function formatarData(valor: string | null | undefined): string {
   if (!valor) return AUSENTE;
-  const data = new Date(`${valor}T00:00:00`);
-  return Number.isNaN(data.getTime())
-    ? valor
-    : new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(data);
+  try {
+    const data = valor.includes("T") ? new Date(valor) : new Date(`${valor}T00:00:00`);
+    if (Number.isNaN(data.getTime())) {
+      return valor.split("T")[0]?.replace(/-/g, "/") ?? valor;
+    }
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(data);
+  } catch {
+    return valor.split("T")[0]?.replace(/-/g, "/") ?? valor;
+  }
 }
 
 // Temporadas ENSO são janelas de 3 meses; mostramos o mês central (ex.: JAS → agosto).

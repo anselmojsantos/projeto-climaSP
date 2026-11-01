@@ -40,7 +40,19 @@ export interface CemadenMensalGeralRow {
 	pct_st_sem_leitura: NumericValue;
 }
 
-/** Todas as estações de um mês (formato AAAA-MM ou AAAA-MM-DD). */
+export interface CemadenEstacaoRow {
+	latitude: NumericValue;
+	longitude: NumericValue;
+	nomeEstacao: string;
+	situacao: string | null;
+}
+
+/**
+ * Todas as estações de um mês (formato AAAA-MM).
+ *
+ * O filtro compara o texto do mês, igual a FindCemadenMeses: assim o mês
+ * oferecido no seletor sempre encontra linhas, sem depender do fuso da sessão.
+ */
 export async function FindCemadenMensal(periodo: string): Promise<CemadenMensalRow[]> {
 	const { rows } = await pool.query<CemadenMensalRow>(
 		`
@@ -54,7 +66,7 @@ export async function FindCemadenMensal(periodo: string): Promise<CemadenMensalR
 		        "pct_horas_com_chuva", "pct_horas_sem_chuva",
 		        "situacao"
 		 FROM df_cmd_mensal
-		 WHERE date_trunc('month', "periodo") = date_trunc('month', ($1 || '-01')::timestamptz)
+		 WHERE to_char("periodo", 'YYYY-MM') = $1
 		 ORDER BY "soma_mm" DESC NULLS LAST
 		`,
 		[periodo],
@@ -62,8 +74,10 @@ export async function FindCemadenMensal(periodo: string): Promise<CemadenMensalR
 	return rows;
 }
 
-/** Resumo geral de um mês. */
-export async function FindCemadenMensalGeral(periodo: string): Promise<CemadenMensalGeralRow | null> {
+/** Resumo geral de um mês (formato AAAA-MM). */
+export async function FindCemadenMensalGeral(
+	periodo: string,
+): Promise<CemadenMensalGeralRow | null> {
 	const { rows } = await pool.query<CemadenMensalGeralRow>(
 		`
 		 SELECT "periodo"::text AS "periodo",
@@ -74,7 +88,7 @@ export async function FindCemadenMensalGeral(periodo: string): Promise<CemadenMe
 		        "n_st_monit_ch", "n_st_monit_ch_z", "n_st_sem_leitura", "n_st_total",
 		        "pct_st_monit_ch", "pct_st_monit_ch_z", "pct_st_sem_leitura"
 		 FROM df_cmd_mgeral
-		 WHERE date_trunc('month', "periodo") = date_trunc('month', ($1 || '-01')::timestamptz)
+		 WHERE to_char("periodo", 'YYYY-MM') = $1
 		 LIMIT 1
 		`,
 		[periodo],
@@ -91,5 +105,19 @@ export async function FindCemadenMeses(): Promise<string[]> {
 		 ORDER BY "periodo"
 		`,
 	);
-	return rows.map((r) => r.periodo);
+	return rows.map((row) => row.periodo);
+}
+
+/** Coordenadas e situação de cada estação no mês (payload leve para o mapa). */
+export async function FindCemadenEstacoes(periodo: string): Promise<CemadenEstacaoRow[]> {
+	const { rows } = await pool.query<CemadenEstacaoRow>(
+		`
+		 SELECT "latitude", "longitude", "nomeEstacao", "situacao"
+		 FROM df_cmd_mensal
+		 WHERE to_char("periodo", 'YYYY-MM') = $1
+		 ORDER BY "nomeEstacao"
+		`,
+		[periodo],
+	);
+	return rows;
 }

@@ -1,8 +1,8 @@
-import BemVindos from "./bem-vindos";
-import CardElNino from "./card-el-nino";
-import FontesDeDados from "./fontes-de-dados";
-import RegioesNino from "./regioes-nino";
-import FluxoSistema from "./fluxo-sistema";
+import BemVindos from "./bem-vindos/BemVindos";
+import CardElNino from "./card-el-nino/CardElNino";
+import FontesDeDados from "./fontes-de-dados/FontesDeDados";
+import RegioesNino from "./regioes-nino/RegioesNino";
+import FluxoSistema from "./fluxo-sistema/FluxoSistema";
 
 interface Props {
   baseApi: string;

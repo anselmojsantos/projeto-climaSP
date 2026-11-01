@@ -8,21 +8,15 @@ export const FONTES: Fonte[] = [
     cadencia: "semanal + mensal",
   },
   {
-    nome: "INMET — Meteorologia SP",
+    nome: "CEMADEN — Desastres",
     descricao:
-      "Séries de chuva e temperatura das estações automáticas que cobrem a capital e o interior.",
-    cadencia: "horária / diária",
-  },
-  {
-    nome: "ANA — Hidrologia",
-    descricao:
-      "Nível e vazão de rios e mananciais que abastecem a capital; base da análise de estiagens.",
+      "Rede de estações e alertas de enchente e deslizamento; canal de decisão para serviços públicos.",
     cadencia: "diária",
   },
   {
-    nome: "CEMADEN — Desastres",
+    nome: "Defesa Civil/SP — Ocorrências",
     descricao:
-      "Rede de 710 estações e alertas de enchente e deslizamento; canal de decisão para serviços públicos.",
-    cadencia: "quase tempo real",
+      "Registro de ocorrências de alagamentos e inundações no estado de São Paulo.",
+    cadencia: "diária",
   },
 ];

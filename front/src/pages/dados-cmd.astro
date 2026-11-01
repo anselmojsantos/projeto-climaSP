@@ -1,0 +1,15 @@
+---
+import Base from "../layouts/Base.astro";
+import CemadenMensal from "../components/cemaden/CemadenMensal";
+import Ocorrencias from "../components/cemaden/Ocorrencias";
+import { getRotaPorSlug } from "../config/rotas";
+
+const baseApi = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3333";
+const rota = getRotaPorSlug("dados-cmd");
+const titulo = rota.titulo;
+---
+
+<Base titulo={titulo}>
+  <CemadenMensal client:load baseApi={baseApi} />
+  <Ocorrencias client:only="react" baseApi={baseApi} />
+</Base>

@@ -3,8 +3,8 @@ import type { Etapa } from "./types";
 export const ETAPAS: Etapa[] = [
   {
     numero: "1",
-    titulo: "Ingestão ao vivo",
-    descricao: "Buscadores conectados a NOAA, INMET, ANA e CEMADEN.",
+    titulo: "Coleta e análise de dados",
+    descricao: "Análise dos dados coletados nas fontes NOAA, CEMADEN e Defesa Civil/SP.",
   },
   {
     numero: "2",
@@ -18,13 +18,14 @@ export const ETAPAS: Etapa[] = [
   },
   {
     numero: "4",
-    titulo: "Correlação e inferência",
-    descricao: "Ensaio Pacífico × clima de SP (ONI, chuva, temperatura).",
+    titulo: "Correlação e regressão linear",
+    descricao:
+      "Correlação e regressão linear entre o Pacífico (ONI) e o clima de SP, com análise de ciclos trimestrais móveis.",
   },
   {
     numero: "5",
-    titulo: "Modelo de ML",
+    titulo: "Resultados e visualização",
     descricao:
-      "SARIMA / florestas / LSTM preveem chuva forte, calor e estiagem.",
+      "Painéis, gráficos e tabelas para interpretar e visualizar os resultados da análise.",
   },
 ];

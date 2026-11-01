@@ -1,9 +1,13 @@
 import type {
+	CemadenEstacaoRow,
 	CemadenMensalGeralRow,
 	CemadenMensalRow,
 } from "../models/cemaden.model.js";
 
 type NumericValue = number | string | null;
+
+/** Mesmo valor gravado em df_cmd_mensal.situacao pelo notebook. */
+const SITUACAO_COM_CHUVA = "com_chuva";
 
 function numero(valor: NumericValue): number | null {
 	if (valor === null) return null;
@@ -11,12 +15,16 @@ function numero(valor: NumericValue): number | null {
 	return Number.isFinite(convertido) ? convertido : null;
 }
 
-function numero2(valor: NumericValue): number | null {
-	const n = numero(valor);
-	return n === null ? null : Math.round(n * 100) / 100;
+function numeroArredondado(valor: NumericValue): number | null {
+	const convertido = numero(valor);
+	return convertido === null ? null : arredondar(convertido);
 }
 
-export interface EstacaoView {
+function arredondar(valor: number): number {
+	return Math.round(valor * 100) / 100;
+}
+
+export interface CemadenEstacaoView {
 	codEstacao: string;
 	nomeEstacao: string;
 	municipio: string;
@@ -41,12 +49,12 @@ export interface CemadenMensalView {
 	somaTotalMm: number;
 	mediaSomaMm: number | null;
 	estacoesComChuva: number;
-	estacoes: EstacaoView[];
+	estacoes: CemadenEstacaoView[];
 }
 
 export function PresentCemadenMensal(rows: CemadenMensalRow[]): CemadenMensalView {
 	const periodo = rows[0]?.periodo ?? "";
-	const estacoes: EstacaoView[] = rows.map((row) => ({
+	const estacoes: CemadenEstacaoView[] = rows.map((row) => ({
 		codEstacao: row.codEstacao,
 		nomeEstacao: row.nomeEstacao,
 		municipio: row.municipio,
@@ -55,26 +63,30 @@ export function PresentCemadenMensal(rows: CemadenMensalRow[]): CemadenMensalVie
 		longitude: numero(row.longitude),
 		periodo: row.periodo,
 		nObs: numero(row.n_obs),
-		somaMm: numero2(row.soma_mm),
-		mediaMm: numero2(row.media_mm),
+		somaMm: numeroArredondado(row.soma_mm),
+		mediaMm: numeroArredondado(row.media_mm),
 		horasComLeitura: numero(row.horas_com_leitura),
 		horasComChuva: numero(row.horas_com_chuva),
 		horasSemChuva: numero(row.horas_sem_chuva),
-		pctHorasComChuva: numero2(row.pct_horas_com_chuva),
-		pctHorasSemChuva: numero2(row.pct_horas_sem_chuva),
+		pctHorasComChuva: numeroArredondado(row.pct_horas_com_chuva),
+		pctHorasSemChuva: numeroArredondado(row.pct_horas_sem_chuva),
 		situacao: row.situacao,
 	}));
 
-	const somas = estacoes.map((e) => e.somaMm ?? 0);
-	const total = somas.reduce((a, b) => a + b, 0);
-	const media = somas.length === 0 ? null : Math.round((total / somas.length) * 100) / 100;
+	// Estação sem leitura não tem soma: fica fora da média em vez de puxá-la para baixo.
+	const somas = estacoes
+		.map((estacao) => estacao.somaMm)
+		.filter((soma): soma is number => soma !== null);
+	const total = somas.reduce((acumulado, soma) => acumulado + soma, 0);
+	const media = somas.length === 0 ? null : arredondar(total / somas.length);
 
 	return {
 		periodo,
 		totalEstacoes: estacoes.length,
-		somaTotalMm: Math.round(total * 100) / 100,
+		somaTotalMm: arredondar(total),
 		mediaSomaMm: media,
-		estacoesComChuva: estacoes.filter((e) => e.situacao === "com_chuva").length,
+		estacoesComChuva: estacoes.filter((estacao) => estacao.situacao === SITUACAO_COM_CHUVA)
+			.length,
 		estacoes,
 	};
 }
@@ -103,16 +115,34 @@ export function PresentCemadenMensalGeral(row: CemadenMensalGeralRow): CemadenMe
 		fim: row.fim,
 		nObs: numero(row.n_obs),
 		nEstacoesComLeitura: numero(row.n_estacoes_com_leitura),
-		somaMm: numero2(row.soma_mm),
-		mediaMm: numero2(row.media_mm),
+		somaMm: numeroArredondado(row.soma_mm),
+		mediaMm: numeroArredondado(row.media_mm),
 		nStMonitCh: numero(row.n_st_monit_ch),
 		nStMonitChZ: numero(row.n_st_monit_ch_z),
 		nStSemLeitura: numero(row.n_st_sem_leitura),
 		nStTotal: numero(row.n_st_total),
-		pctStMonitCh: numero2(row.pct_st_monit_ch),
-		pctStMonitChZ: numero2(row.pct_st_monit_ch_z),
-		pctStSemLeitura: numero2(row.pct_st_sem_leitura),
+		pctStMonitCh: numeroArredondado(row.pct_st_monit_ch),
+		pctStMonitChZ: numeroArredondado(row.pct_st_monit_ch_z),
+		pctStSemLeitura: numeroArredondado(row.pct_st_sem_leitura),
 	};
+}
+
+export interface CemadenEstacaoResumoView {
+	latitude: number | null;
+	longitude: number | null;
+	nomeEstacao: string;
+	situacao: string | null;
+}
+
+export function PresentCemadenEstacoes(
+	rows: CemadenEstacaoRow[],
+): CemadenEstacaoResumoView[] {
+	return rows.map((row) => ({
+		latitude: numero(row.latitude),
+		longitude: numero(row.longitude),
+		nomeEstacao: row.nomeEstacao,
+		situacao: row.situacao,
+	}));
 }
 
 export interface CemadenMesesView {

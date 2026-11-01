@@ -1,7 +1,8 @@
 ---
-import { SECOES } from "../types/secoes";
+import { ROTAS } from "../config/rotas";
 
 const atual = Astro.url.pathname.replace(/\/$/, "") || "/";
+const rotas = ROTAS.slice().sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
 ---
 
 <div
@@ -42,8 +43,8 @@ const atual = Astro.url.pathname.replace(/\/$/, "") || "/";
 
   <nav class="mt-8 flex flex-col gap-0.5">
     {
-      SECOES.map(({ slug, menu }) => {
-        const href = `/${slug}`;
+      rotas.map(({ path, menu }) => {
+        const href = path;
         const ativo = atual === href || (atual === "/" && href === "/home");
 
         return (
@@ -76,9 +77,6 @@ const atual = Astro.url.pathname.replace(/\/$/, "") || "/";
 </aside>
 
 <style>
-  /* A gaveta e o fundo ficam sempre montados; o estado é o atributo
-     data-aberta. O `hidden`/`visibility` sem atraso cortaria a saída, por isso
-     a visibility só é aplicada 320ms depois, quando o deslize já terminou. */
   [data-nav],
   [data-nav-fundo] {
     pointer-events: none;

@@ -1,10 +1,11 @@
 ---
 import Base from "../layouts/Base.astro";
 import Noaa from "../components/noaa";
-import { SECOES } from "../types/secoes";
+import { getRotaPorSlug } from "../config/rotas";
 
-const titulo = SECOES.find((secao) => secao.slug === "dados-noaa")!.titulo;
 const baseApi = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3333";
+const rota = getRotaPorSlug("dados-noaa");
+const titulo = rota.titulo;
 ---
 
 <Base titulo={titulo}>

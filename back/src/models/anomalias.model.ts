@@ -23,12 +23,6 @@ export interface MediaMensalSerieRow extends MediaMensalRow {
 	observation_date: string | null;
 }
 
-/**
- * Resumo por região Niño usado na tabela "Onde o NOAA mede o El Niño".
- *
- * As colunas de df_anomalias foram criadas com identificadores entre aspas
- * (case-sensitive), então toda referência precisa delas.
- */
 export async function FindAnomaliasRegioes(): Promise<AnomaliaRegiaoRow[]> {
 	const { rows } = await pool.query<AnomaliaRegiaoRow>(
 		`
@@ -45,7 +39,6 @@ export async function FindAnomaliasRegioes(): Promise<AnomaliaRegiaoRow[]> {
 	return rows;
 }
 
-/** Última linha de df_media_mensal: as médias do mês mais recente por região Niño. */
 export async function FindUltimaMediaMensal(): Promise<MediaMensalRow | null> {
 	const { rows } = await pool.query<MediaMensalRow>(
 		`
@@ -58,11 +51,6 @@ export async function FindUltimaMediaMensal(): Promise<MediaMensalRow | null> {
 	return rows[0] ?? null;
 }
 
-/**
- * Série completa de df_media_mensal: a média mensal de cada região Niño ao longo
- * do período do estudo. O texto da data vem no formato ISO, consumido pela view
- * para rotular o mês.
- */
 export async function FindMediaMensal(): Promise<MediaMensalSerieRow[]> {
 	const { rows } = await pool.query<MediaMensalSerieRow>(
 		`
@@ -74,3 +62,4 @@ export async function FindMediaMensal(): Promise<MediaMensalSerieRow[]> {
 	);
 	return rows;
 }
+
