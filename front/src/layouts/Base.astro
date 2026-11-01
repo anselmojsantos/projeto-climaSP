@@ -32,9 +32,12 @@ const { titulo } = Astro.props;
 
       <div class="flex min-w-0 flex-1 flex-col">
         <main class="min-w-0 flex-1 px-4 py-7 xl:px-6 xl:py-10">
-          <h1 class="m-0 mb-8 text-[28px] leading-tight font-semibold xl:text-[32px]">
-            {titulo}
-          </h1>
+          <div class="mb-8 flex items-center gap-3">
+            <img src="/favicon.svg" alt="" aria-hidden="true" class="size-8 shrink-0" />
+            <h1 class="m-0 text-[28px] leading-tight font-semibold xl:text-[32px]">
+              {titulo}
+            </h1>
+          </div>
           <slot />
         </main>
 
