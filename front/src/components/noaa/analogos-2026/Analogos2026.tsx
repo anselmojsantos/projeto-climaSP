@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { PALETA } from "./model/paleta";
+import { PALETA_ANALOGOS as PALETA } from "./model/paleta";
 import type { EstadoAnalogos, Props, RespostaAnalogos } from "./model/types";
 
 export default function Analogos2026({ baseApi }: Props) {
