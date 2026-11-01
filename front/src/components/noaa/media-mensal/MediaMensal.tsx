@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CORES } from "./model/cores";
+import { CORES_REGIOES as CORES } from "./model/cores";
 import type {
   EstadoMediaMensal,
   Props,
