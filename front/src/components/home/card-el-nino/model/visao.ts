@@ -7,7 +7,7 @@ export const VISAO_INDISPONIVEL: Visao = {
   oniValor: "—",
   nino34Data: "—",
   nino34Valor: "—",
-  projecaoRotulo: "Projeção para NDJ",
+  projecaoRotulo: "Projeção",
   projecaoData: "—",
   projecaoValor: "—",
   procedencia: "Dados de procedência indisponíveis.",

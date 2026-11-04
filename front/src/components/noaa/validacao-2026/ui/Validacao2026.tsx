@@ -25,6 +25,7 @@ export default function Validacao2026({ baseApi }: Props) {
           fase: "ok",
           temporadas: dados.temporadas ?? [],
           temporadasFuturo: dados.temporadasFuturo ?? [],
+          anosFuturo: dados.anosFuturo ?? [],
           alvoFuturo: dados.alvoFuturo ?? [],
           aso2026: dados.aso2026 ?? null,
           analogos: dados.analogos ?? [],
@@ -73,6 +74,27 @@ export default function Validacao2026({ baseApi }: Props) {
 
   const aso2026 = estado.fase === "ok" ? estado.aso2026 : null;
 
+  // O numero de horizontes vem do backend (SON-NDJ ou SON-JFM do ano seguinte).
+  const horizontes = estado.fase === "ok" ? estado.temporadasFuturo : [];
+  const anos = estado.fase === "ok" ? estado.anosFuturo : [];
+
+  // Mostra o ano no rótulo quando a projeção cruza o ano — é o caso atual,
+  // SON/2026 a JFM/2027.
+  const primeiroAno = anos[0] ?? null;
+  const ultimoAno = anos[anos.length - 1] ?? null;
+  const primeiroNome = horizontes[0] ?? "";
+  const ultimoNome = horizontes[horizontes.length - 1] ?? "";
+  const cruzaAno =
+    primeiroAno !== null && ultimoAno !== null && primeiroAno !== ultimoAno;
+  const intervalo = cruzaAno
+    ? `de ${primeiroNome}/${primeiroAno} a ${ultimoNome}/${ultimoAno}`
+    : `de ${primeiroNome} a ${ultimoNome}`;
+
+  const subtitulo =
+    horizontes.length > 0
+      ? `Como a reta treinada nos anos análogos se comporta em ${horizontes.length} horizontes — ${intervalo}.`
+      : "Como a reta treinada nos anos análogos se comporta em cada horizonte.";
+
   return (
     <section aria-labelledby="validacao-2026">
       <p className="m-0 mb-1 text-[11px] uppercase tracking-wide text-ink-secondary">
@@ -82,7 +104,7 @@ export default function Validacao2026({ baseApi }: Props) {
         Validação da reta de projeção
       </h2>
       <p className="mt-1.5 mb-0 text-[15px] leading-[1.3] text-ink-secondary">
-        O ajuste da regressão em três horizontes — de SON a NDJ.
+        {subtitulo}
       </p>
 
       {estado.fase === "carregando" && (

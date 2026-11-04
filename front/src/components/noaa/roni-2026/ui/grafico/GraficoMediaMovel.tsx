@@ -6,11 +6,12 @@ import {
   PASSO_EIXO,
 } from "../../../model/limiares";
 import { formatarNumero } from "../../../lib/formato";
+import { formatoIntervalo, listaTemporadas, rotuloEixo } from "../../model/rotulos";
 import type { PontoRoni } from "../../model/types";
 
 const LARGURA = 520;
-const ALTURA = 320;
-const MARGEM = { topo: 26, direita: 20, base: 44, esquerda: 48 };
+const ALTURA = 340;
+const MARGEM = { topo: 26, direita: 20, base: 64, esquerda: 48 };
 
 const LARGURA_PLOT = LARGURA - MARGEM.esquerda - MARGEM.direita;
 const ALTURA_PLOT = ALTURA - MARGEM.topo - MARGEM.base;
@@ -79,6 +80,32 @@ export default function GraficoMediaMovel({ pontos }: Props) {
   const ultimoObservado = pontos[ancora ?? pontos.length - 1]!;
   const previstos = pontos.filter(ehPrevisto);
 
+  // O ano base é o do último observado: a partir dele o rótulo do eixo ganha
+  // o sufixo do ano, porque JFM e DJF se repetem entre 2026 e 2027.
+  const anoBase = ultimoObservado.ano;
+  const rotuloDe = (ponto: PontoRoni) => rotuloEixo(ponto, anoBase);
+  const chaveDe = (ponto: PontoRoni) => `${ponto.ano ?? "s"}-${ponto.temporada}`;
+  const intervaloProjecao = formatoIntervalo(previstos);
+  const listaProjecao = listaTemporadas(previstos);
+  const tamanhoRotuloX = pontos.length > 10 ? 10 : 12;
+  // Agrupa os pontos por ano para desenhar a faixa de ano sob o eixo, no lugar
+  // de sufixar cada rótulo ("DJF/27"), que fica poluído e colide no fim.
+  const gruposAno = pontos.reduce<{ ano: number; inicio: number; fim: number }[]>(
+    (grupos, ponto, indice) => {
+      if (ponto.ano === null) return grupos;
+      const ultimo = grupos[grupos.length - 1];
+      if (ultimo && ultimo.ano === ponto.ano) ultimo.fim = indice;
+      else grupos.push({ ano: ponto.ano, inicio: indice, fim: indice });
+      return grupos;
+    },
+    [],
+  );
+
+  const descricaoProjecao =
+    previstos.length > 0
+      ? ` Projeção ${intervaloProjecao} em linha tracejada, por regressão linear sobre os anos análogos.`
+      : "";
+
   return (
     <figure className="m-0 flex flex-col gap-4 rounded-2xl bg-soft p-4 xl:flex-row xl:items-start 2xl:flex-col">
       <div className="flex min-w-0 flex-1 flex-col gap-3">
@@ -87,7 +114,7 @@ export default function GraficoMediaMovel({ pontos }: Props) {
             viewBox={`0 0 ${LARGURA} ${ALTURA}`}
             className="mx-auto block h-auto w-full"
             role="img"
-            aria-label={`RONI 3.4 de 2026 por temporada. Última observada: ${ultimoObservado.temporada}, ${formatarNumero(ultimoObservado.roni)} graus Celsius, fase ${ultimoObservado.fase}. Projeção SON–NDJ em linha tracejada, por regressão linear sobre os anos análogos.`}
+            aria-label={`RONI 3.4 por temporada. Última observada: ${ultimoObservado.temporada}, ${formatarNumero(ultimoObservado.roni)} graus Celsius, fase ${ultimoObservado.fase}.${descricaoProjecao}`}
         >
           {ticks.map((tick) => (
             <line
@@ -176,10 +203,10 @@ export default function GraficoMediaMovel({ pontos }: Props) {
           {pontos.map((ponto, indice) => {
             const cor = corDaFase(ponto.fase);
             const previsto = ehPrevisto(ponto);
-  
+
             return (
               <circle
-                key={ponto.temporada}
+                key={chaveDe(ponto)}
                 cx={x(indice)}
                 cy={y(ponto.roni)}
                 r={5}
@@ -187,35 +214,80 @@ export default function GraficoMediaMovel({ pontos }: Props) {
                 strokeWidth={2}
               >
                 <title>
-                  {`${ponto.temporada}: ${formatarNumero(ponto.roni)} °C (${ponto.fase ?? "—"})${previsto ? " · previsto" : ""}`}
+                  {`${rotuloDe(ponto)}: ${formatarNumero(ponto.roni)} °C (${ponto.fase ?? "—"})${previsto ? " · previsto" : ""}`}
                 </title>
               </circle>
             );
           })}
   
-          {pontos.map((ponto, indice) => (
-            <text
-              key={`rotulo-${ponto.temporada}`}
-              x={x(indice)}
-              y={y(ponto.roni) - 12}
-              textAnchor="middle"
-              className="fill-ink font-data text-[11px]"
-            >
-              {formatarNumero(ponto.roni)}
-            </text>
-          ))}
-  
-          {pontos.map((ponto, indice) => (
-            <text
-              key={`eixo-x-${ponto.temporada}`}
-              x={x(indice)}
-              y={base + 22}
-              textAnchor="middle"
-              className="fill-ink-secondary text-[12px]"
-            >
-              {ponto.temporada}
-            </text>
-          ))}
+          {pontos.map((ponto, indice) => {
+            // Perto de zero a reta passa em cima do valor; o rótulo vai para a
+            // direita do ponto para não encostar no rótulo da temporada anterior.
+            const pertoDeZero = Math.abs(ponto.roni) < 0.15;
+            const xRotulo = x(indice) + (pertoDeZero ? 18 : 0);
+            const yRotulo = y(ponto.roni) + (pertoDeZero ? 4 : -12);
+
+            return (
+              <g key={`rotulos-${chaveDe(ponto)}`}>
+                <text
+                  x={xRotulo}
+                  y={yRotulo}
+                  textAnchor={pertoDeZero ? "start" : "middle"}
+                  className="fill-ink stroke-bg font-data text-[11px]"
+                  strokeWidth={3}
+                  style={{ paintOrder: "stroke" }}
+                >
+                  {formatarNumero(ponto.roni)}
+                </text>
+                <text
+                  x={x(indice)}
+                  y={base + 16}
+                  textAnchor="middle"
+                  className="fill-ink-secondary"
+                  style={{ fontSize: tamanhoRotuloX }}
+                >
+                  {ponto.temporada}
+                </text>
+              </g>
+            );
+          })}
+
+          {gruposAno.length > 1 &&
+            gruposAno.map((grupo) => {
+              const inicio = x(grupo.inicio) - 14;
+              const fimGrupo = x(grupo.fim) + 14;
+
+              return (
+                <g key={`ano-${grupo.ano}`}>
+                  <line
+                    x1={inicio}
+                    x2={fimGrupo}
+                    y1={base + 32}
+                    y2={base + 32}
+                    className="stroke-data-neutral/40"
+                    strokeWidth={1}
+                  />
+                  <text
+                    x={(inicio + fimGrupo) / 2}
+                    y={base + 46}
+                    textAnchor="middle"
+                    className="fill-ink-secondary text-[10px]"
+                  >
+                    {grupo.ano}
+                  </text>
+                  {grupo !== gruposAno[0] && (
+                    <line
+                      x1={inicio - 8}
+                      x2={inicio - 8}
+                      y1={base + 26}
+                      y2={base + 40}
+                      className="stroke-data-neutral/40"
+                      strokeWidth={1}
+                    />
+                  )}
+                </g>
+              );
+            })}
           </svg>
         </div>
   
@@ -243,12 +315,13 @@ export default function GraficoMediaMovel({ pontos }: Props) {
       </div>
       <figcaption className="flex min-w-0 flex-col gap-2 text-[14px] leading-[1.45] text-data-neutral xl:order-first xl:w-[360px] xl:shrink-0 2xl:order-none 2xl:w-auto">
         <p className="m-0">
-          <span className="font-semibold text-ink-secondary">Projeção:</span> com os anos
-          análogos como amostra, ajustou-se uma regressão linear para cada temporada futura —
-          a reta aprende, nos análogos, como o RONI de ASO se relaciona com o que veio depois
-          (SON, OND e NDJ). Aplicando o valor observado de {ultimoObservado.temporada} (
-          {formatarNumero(ultimoObservado.roni)} °C) como entrada, ela estima os valores
-          abaixo.
+          <span className="font-semibold text-ink-secondary">Projeção:</span> para cada
+          temporada futura foi ajustada uma regressão linear sobre os anos análogos — cada
+          ano entra como um ponto, com o RONI de ASO no eixo horizontal e o da temporada no
+          vertical. A reta treinada descreve como o evento costuma evoluir de ASO até
+          aquele horizonte ({listaProjecao}); aplicando o valor observado em{" "}
+          {ultimoObservado.temporada} ({formatarNumero(ultimoObservado.roni)} °C) como
+          entrada, ela gera os valores abaixo. A projeção cobre {intervaloProjecao}.
         </p>
 
         {previstos.length > 0 && (
@@ -277,12 +350,12 @@ export default function GraficoMediaMovel({ pontos }: Props) {
             </thead>
             <tbody>
               {previstos.map((ponto) => (
-                <tr key={ponto.temporada}>
+                <tr key={chaveDe(ponto)}>
                   <th
                     scope="row"
                     className="border-b border-data-neutral/15 py-1 pr-3 text-left font-normal text-ink-secondary"
                   >
-                    {ponto.temporada}
+                    {rotuloDe(ponto)}
                   </th>
                   <td className="border-b border-data-neutral/15 py-1 pr-3 whitespace-nowrap">
                     {formatarNumero(ponto.roni)} °C

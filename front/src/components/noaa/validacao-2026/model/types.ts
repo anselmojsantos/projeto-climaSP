@@ -13,6 +13,7 @@ export interface AnalogoValidacao {
 export interface RespostaValidacao {
   temporadas?: string[];
   temporadasFuturo?: string[];
+  anosFuturo?: (number | null)[];
   alvoFuturo?: (number | null)[];
   aso2026?: number | null;
   analogos?: AnalogoValidacao[];
@@ -39,6 +40,7 @@ export type EstadoValidacao =
       fase: "ok";
       temporadas: string[];
       temporadasFuturo: string[];
+      anosFuturo: (number | null)[];
       alvoFuturo: (number | null)[];
       aso2026: number | null;
       analogos: AnalogoValidacao[];

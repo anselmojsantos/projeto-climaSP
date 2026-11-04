@@ -4,6 +4,7 @@ export interface Props {
 
 export interface TemporadaRoni {
   temporada: string;
+  ano: number | null;
   roni: number | null;
   fase: string | null;
   origem: string | null;
@@ -16,6 +17,7 @@ export interface RespostaTemporadas {
 
 export interface PontoRoni {
   temporada: string;
+  ano: number | null;
   roni: number;
   fase: string | null;
   origem: string | null;

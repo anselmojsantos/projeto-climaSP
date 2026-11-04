@@ -30,7 +30,7 @@ function montarVisao(estado: Estado): Visao {
     oniValor: `${formatarNumero(oni.nino34_mm3)} °C`,
     nino34Data: formatarData(weekly.observation_date),
     nino34Valor: `${formatarNumero(weekly.nino34)} °C`,
-    projecaoRotulo: `Projeção para ${projecao.temporada}`,
+    projecaoRotulo: `Projeção até ${projecao.temporada}`,
     projecaoData: rotuloCentroTemporada(projecao.temporada, projecao.ano),
     projecaoValor: `${formatarNumero(projecao.nino34_mm3)} °C`,
     procedencia: `Dados semanais: ${formatarData(coverage.first_observation_date)} a ${formatarData(coverage.last_observation_date)} (${coverage.total_weeks} semanas).`,

@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { FindDf2026ByTempory } from "../models/df2026.model.js";
+import { FindUltimaProjecao, FindUltimoObservado } from "../models/df2026.model.js";
 import {
 	FindLatestWeekly,
 	GetFrequenciaElNino34,
@@ -13,8 +13,8 @@ export async function GetEnsoSinal(
 ) {
 	try {
 		const [oni, projecao, weekly, coverage, frequencia] = await Promise.all([
-			FindDf2026ByTempory("JAS"),
-			FindDf2026ByTempory("NDJ"),
+			FindUltimoObservado(),
+			FindUltimaProjecao(),
 			FindLatestWeekly(),
 			GetWeeklyCoverage(),
 			GetFrequenciaElNino34(),

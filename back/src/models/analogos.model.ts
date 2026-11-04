@@ -30,6 +30,8 @@ export interface FuturoRow {
 	SON: NumericValue;
 	OND: NumericValue;
 	NDJ: NumericValue;
+	DJF: NumericValue;
+	JFM: NumericValue;
 }
 
 /** Universo de onde saíram os análogos: todos os anos com janela JFM–ASO completa. */
@@ -45,19 +47,28 @@ export async function FindCandidatos(): Promise<CandidatosRow> {
 	return rows[0] ?? { total: 0, de: null, ate: null };
 }
 
-/** SON–NDJ observados de cada ano — janela que a projeção precisa estimar. */
+/**
+ * Temporadas futuras observadas de cada ano.
+ *
+ * SON, OND e NDJ caem no proprio ano do ASO. DJF e JFM caem no ano seguinte,
+ * porque um trimestre e nomeado pelo mes central: DJF termina em janeiro.
+ */
 export async function FindFuturoAnalogos(): Promise<FuturoRow[]> {
 	const { rows } = await pool.query<FuturoRow>(
 		`
-		 SELECT "YR" AS "Ano",
-		        max(CASE WHEN "SEAS" = 'ASO' THEN "ANOM" END) AS "ASO",
-		        max(CASE WHEN "SEAS" = 'SON' THEN "ANOM" END) AS "SON",
-		        max(CASE WHEN "SEAS" = 'OND' THEN "ANOM" END) AS "OND",
-		        max(CASE WHEN "SEAS" = 'NDJ' THEN "ANOM" END) AS "NDJ"
-		 FROM df_hist_roni
-		 WHERE "SEAS" IN ('ASO', 'SON', 'OND', 'NDJ')
-		 GROUP BY "YR"
-		 ORDER BY "YR"
+		 SELECT y."YR" AS "Ano",
+		        max(CASE WHEN y."SEAS" = 'ASO' THEN y."ANOM" END) AS "ASO",
+		        max(CASE WHEN y."SEAS" = 'SON' THEN y."ANOM" END) AS "SON",
+		        max(CASE WHEN y."SEAS" = 'OND' THEN y."ANOM" END) AS "OND",
+		        max(CASE WHEN y."SEAS" = 'NDJ' THEN y."ANOM" END) AS "NDJ",
+		        (SELECT max(n."ANOM") FROM df_hist_roni n
+		          WHERE n."YR" = y."YR" + 1 AND n."SEAS" = 'DJF') AS "DJF",
+		        (SELECT max(n."ANOM") FROM df_hist_roni n
+		          WHERE n."YR" = y."YR" + 1 AND n."SEAS" = 'JFM') AS "JFM"
+		 FROM df_hist_roni y
+		 WHERE y."SEAS" IN ('ASO', 'SON', 'OND', 'NDJ')
+		 GROUP BY y."YR"
+		 ORDER BY y."YR"
 		`,
 	);
 	return rows;

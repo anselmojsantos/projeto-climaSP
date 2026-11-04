@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import GraficoMediaMovel from "./grafico/GraficoMediaMovel";
-import type { EstadoRoni, Props, RespostaTemporadas } from "../model/types";
+import { formatoIntervalo } from "../model/rotulos";
+import type {
+  EstadoRoni,
+  PontoRoni,
+  Props,
+  RespostaTemporadas,
+} from "../model/types";
 
 export default function Roni2026({ baseApi }: Props) {
   const [estado, setEstado] = useState<EstadoRoni>({ fase: "carregando" });
@@ -35,13 +41,14 @@ export default function Roni2026({ baseApi }: Props) {
     };
   }, [baseApi]);
 
-  const pontos =
+  const pontos: PontoRoni[] =
     estado.fase === "ok"
       ? estado.temporadas.flatMap((temporada) =>
           temporada.roni !== null
             ? [
                 {
                   temporada: temporada.temporada,
+                  ano: temporada.ano,
                   roni: temporada.roni,
                   fase: temporada.fase,
                   origem: temporada.origem,
@@ -51,18 +58,37 @@ export default function Roni2026({ baseApi }: Props) {
         )
       : [];
 
+  const observados = pontos.filter((ponto) => ponto.origem !== "Previsto");
+  const previstos = pontos.filter((ponto) => ponto.origem === "Previsto");
+  const anos = [
+    ...new Set(
+      pontos
+        .map((ponto) => ponto.ano)
+        .filter((ano): ano is number => ano !== null),
+    ),
+  ];
+  const tituloAnos =
+    anos.length > 1 ? `${anos[0]}–${anos[anos.length - 1]}` : (anos[0] ?? "");
+
+  const descricao =
+    observados.length > 0
+      ? `Média móvel de 3 meses do Niño 3.4. As temporadas de ${formatoIntervalo(observados)} são observadas` +
+        (previstos.length > 0
+          ? `; as de ${formatoIntervalo(previstos)} são projetadas por regressão linear treinada nos anos análogos. Para cada temporada futura, a reta aprende nesses anos como o RONI de ASO se relaciona com o que veio depois e aplica essa relação ao ASO observado de 2026.`
+          : ".") +
+        " Os limiares de ±0,5 °C separam El Niño, La Niña e Neutro."
+      : "Média móvel de 3 meses do Niño 3.4 por temporada. Os limiares de ±0,5 °C separam El Niño, La Niña e Neutro.";
+
   return (
     <section aria-labelledby="roni-2026">
       <p className="m-0 mb-1 text-[11px] uppercase tracking-wide text-ink-secondary">
         4 · Índice
       </p>
       <h2 id="roni-2026" className="m-0 text-[20px] leading-[1.2] font-semibold">
-        RONI/3.4 — 2026 por temporada
+        RONI/3.4 — {tituloAnos || "série"} por temporada
       </h2>
       <p className="mt-1.5 mb-0 text-[15px] leading-[1.3] text-ink-secondary">
-        Média móvel de 3 meses do Niño 3.4 em 2026: JFM–ASO observados e SON–NDJ
-        projetados por regressão sobre os anos análogos. Os limiares de ±0,5 °C
-        separam El Niño, La Niña e Neutro.
+        {descricao}
       </p>
 
       {estado.fase === "carregando" && (

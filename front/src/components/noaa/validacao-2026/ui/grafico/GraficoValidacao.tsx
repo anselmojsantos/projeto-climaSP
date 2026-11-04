@@ -3,16 +3,11 @@ import { PALETA_ANALOGOS } from "../../../analogos-2026/model/paleta";
 import type { SerieValidacao } from "../../model/types";
 
 const LARGURA = 600;
-const ALTURA = 520;
-const MARGEM = { topo: 30, direita: 16, base: 44, esquerda: 58 };
 const GAP_X = 26;
 const GAP_Y = 34;
 const COLUNAS = 2;
-
-const LARGURA_PLOT = LARGURA - MARGEM.esquerda - MARGEM.direita;
-const ALTURA_PLOT = ALTURA - MARGEM.topo - MARGEM.base;
-const LARGURA_PAINEL = (LARGURA_PLOT - GAP_X) / COLUNAS;
-const ALTURA_PAINEL = (ALTURA_PLOT - GAP_Y) / COLUNAS;
+const ALTURA_PAINEL = 206;
+const MARGEM = { topo: 30, direita: 16, base: 44, esquerda: 58 };
 
 const PASSO_EIXO = 0.5;
 const COR_RETA = "#1f77b4";
@@ -68,7 +63,14 @@ export default function GraficoValidacao({ series, aso2026 }: Props) {
     );
   }
 
-  const paineis = series.slice(0, COLUNAS * COLUNAS);
+  // O numero de paineis vem do backend: a projecao pode ter 3 horizontes
+  // (SON-NDJ) ou 5 (SON-JFM do ano seguinte), e a grade acompanha.
+  const paineis = series;
+  const linhas = Math.max(1, Math.ceil(paineis.length / COLUNAS));
+  const larguraPlot = LARGURA - MARGEM.esquerda - MARGEM.direita;
+  const larguraPainel = (larguraPlot - GAP_X * (COLUNAS - 1)) / COLUNAS;
+  const alturaPlot = linhas * ALTURA_PAINEL + (linhas - 1) * GAP_Y;
+  const altura = MARGEM.topo + alturaPlot + MARGEM.base;
 
   const valoresX = [
     ...paineis.flatMap((serie) => serie.pontos.map((ponto) => ponto.aso)),
@@ -87,25 +89,25 @@ export default function GraficoValidacao({ series, aso2026 }: Props) {
   const escalaY = (valor: number) =>
     (valor - dominioY.min) / (dominioY.max - dominioY.min);
 
-  const serieNdj = paineis.find((serie) => serie.temporada === "NDJ");
-  const medianaNdj = serieNdj
-    ? mediana(serieNdj.pontos.map((ponto) => ponto.valor))
+  const serieFinal = paineis[paineis.length - 1];
+  const medianaFinal = serieFinal
+    ? mediana(serieFinal.pontos.map((ponto) => ponto.valor))
     : null;
-  const minimoNdj = serieNdj
-    ? Math.min(...serieNdj.pontos.map((ponto) => ponto.valor))
+  const minimoFinal = serieFinal
+    ? Math.min(...serieFinal.pontos.map((ponto) => ponto.valor))
     : null;
-  const maximoNdj = serieNdj
-    ? Math.max(...serieNdj.pontos.map((ponto) => ponto.valor))
+  const maximoFinal = serieFinal
+    ? Math.max(...serieFinal.pontos.map((ponto) => ponto.valor))
     : null;
-  const asoMinNdj = serieNdj
-    ? Math.min(...serieNdj.pontos.map((ponto) => ponto.aso))
+  const asoMinFinal = serieFinal
+    ? Math.min(...serieFinal.pontos.map((ponto) => ponto.aso))
     : null;
-  const asoMaxNdj = serieNdj
-    ? Math.max(...serieNdj.pontos.map((ponto) => ponto.aso))
+  const asoMaxFinal = serieFinal
+    ? Math.max(...serieFinal.pontos.map((ponto) => ponto.aso))
     : null;
-  const proximosNdj =
-    serieNdj && aso2026 !== null
-      ? [...serieNdj.pontos]
+  const proximosFinal =
+    serieFinal && aso2026 !== null
+      ? [...serieFinal.pontos]
           .sort(
             (a, b) => Math.abs(a.aso - aso2026) - Math.abs(b.aso - aso2026),
           )
@@ -127,21 +129,21 @@ export default function GraficoValidacao({ series, aso2026 }: Props) {
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="w-full">
           <svg
-            viewBox={`0 0 ${LARGURA} ${ALTURA}`}
+            viewBox={`0 0 ${LARGURA} ${altura}`}
             className="mx-auto block h-auto w-full"
             role="img"
-            aria-label={`Dispersão dos ${primeira.pontos.length} anos análogos em três horizontes, com a reta de regressão de cada temporada e a projeção de 2026. ${resumo}.`}
+            aria-label={`Dispersão dos ${primeira.pontos.length} anos análogos em ${paineis.length} horizontes, com a reta de regressão de cada temporada e a projeção de 2026. ${resumo}.`}
           >
             {paineis.map((serie, indice) => {
               const coluna = indice % COLUNAS;
               const linha = Math.floor(indice / COLUNAS);
-              const ox = MARGEM.esquerda + coluna * (LARGURA_PAINEL + GAP_X);
+              const ox = MARGEM.esquerda + coluna * (larguraPainel + GAP_X);
               const oy = MARGEM.topo + linha * (ALTURA_PAINEL + GAP_Y);
               const base = oy + ALTURA_PAINEL;
-              const fim = ox + LARGURA_PAINEL;
+              const fim = ox + larguraPainel;
               const ultimaLinha = linha === Math.floor((paineis.length - 1) / COLUNAS);
 
-              const x = (valor: number) => ox + escalaX(valor) * LARGURA_PAINEL;
+              const x = (valor: number) => ox + escalaX(valor) * larguraPainel;
               const y = (valor: number) => base - escalaY(valor) * ALTURA_PAINEL;
 
               const xRetaMin = Math.min(
@@ -261,8 +263,8 @@ export default function GraficoValidacao({ series, aso2026 }: Props) {
             })}
 
             <text
-              x={MARGEM.esquerda + LARGURA_PLOT / 2}
-              y={ALTURA - 8}
+              x={MARGEM.esquerda + larguraPlot / 2}
+              y={altura - 8}
               textAnchor="middle"
               className="fill-ink-secondary text-[11px]"
             >
@@ -270,9 +272,9 @@ export default function GraficoValidacao({ series, aso2026 }: Props) {
             </text>
             <text
               x={16}
-              y={MARGEM.topo + ALTURA_PLOT / 2}
+              y={MARGEM.topo + alturaPlot / 2}
               textAnchor="middle"
-              transform={`rotate(-90 16 ${MARGEM.topo + ALTURA_PLOT / 2})`}
+              transform={`rotate(-90 16 ${MARGEM.topo + alturaPlot / 2})`}
               className="fill-ink-secondary text-[11px]"
             >
               RONI observado na temporada (°C)
@@ -300,10 +302,12 @@ export default function GraficoValidacao({ series, aso2026 }: Props) {
 
       <figcaption className="flex min-w-0 flex-col gap-2 text-[14px] leading-[1.45] text-data-neutral xl:w-[360px] xl:shrink-0 2xl:w-auto">
         <p className="m-0">
-          <span className="font-semibold text-ink-secondary">O que mostra:</span> os mesmos{" "}
-          {primeira.pontos.length} anos análogos em três horizontes. O eixo horizontal é sempre o RONI
-          observado em ASO; o vertical, o observado na temporada de cada painel. A reta é o
-          ajuste usado na projeção; a estrela é 2026.
+          <span className="font-semibold text-ink-secondary">O que mostra:</span> cada ponto
+          é um dos {primeira.pontos.length} anos análogos, repetido em {paineis.length}{" "}
+          painéis. O eixo horizontal é sempre o RONI observado em ASO; o vertical, o RONI
+          observado na temporada do painel. A reta azul é a regressão linear treinada nesses
+          anos — a mesma que gera a projeção; a estrela aplica o ASO de 2026 à reta de cada
+          horizonte.
         </p>
 
         <table className="w-full border-collapse text-left text-[14px]">
@@ -367,40 +371,40 @@ export default function GraficoValidacao({ series, aso2026 }: Props) {
           diminui com o prazo — não que a estimativa seja inválida.
         </p>
 
-        {serieNdj &&
-        serieNdj.alvo2026 !== null &&
+        {serieFinal &&
+        serieFinal.alvo2026 !== null &&
         aso2026 !== null &&
-        medianaNdj !== null &&
-        minimoNdj !== null &&
-        maximoNdj !== null &&
-        asoMinNdj !== null &&
-        asoMaxNdj !== null ? (
+        medianaFinal !== null &&
+        minimoFinal !== null &&
+        maximoFinal !== null &&
+        asoMinFinal !== null &&
+        asoMaxFinal !== null ? (
           <p className="m-0">
-            Em {serieNdj.temporada}, a estimativa central é{" "}
-            {formatarNumero(serieNdj.alvo2026, 2)} °C, condicional a ASO{" "}
+            Em {serieFinal.temporada}, a estimativa central é{" "}
+            {formatarNumero(serieFinal.alvo2026, 2)} °C, condicional a ASO{" "}
             {formatarNumero(aso2026, 3)} (
-            {aso2026 > asoMaxNdj
+            {aso2026 > asoMaxFinal
               ? "acima do topo da faixa"
-              : aso2026 < asoMinNdj
+              : aso2026 < asoMinFinal
                 ? "abaixo da base da faixa"
                 : "dentro da faixa"}{" "}
-            {formatarNumero(asoMinNdj, 2)}–{formatarNumero(asoMaxNdj, 2)}); os dois análogos
-            mais próximos nesse ponto
-            {proximosNdj.length === 2 && proximosNdj[0] && proximosNdj[1] ? (
+            {formatarNumero(asoMinFinal, 2)}–{formatarNumero(asoMaxFinal, 2)}); os dois
+            análogos mais próximos nesse ponto
+            {proximosFinal.length === 2 && proximosFinal[0] && proximosFinal[1] ? (
               <>
                 {" "}
-                ({proximosNdj[0].ano} e {proximosNdj[1].ano}) tiveram{" "}
-                {formatarNumero(proximosNdj[0].valor, 2)} e{" "}
-                {formatarNumero(proximosNdj[1].valor, 2)} °C
+                ({proximosFinal[0].ano} e {proximosFinal[1].ano}) tiveram{" "}
+                {formatarNumero(proximosFinal[0].valor, 2)} e{" "}
+                {formatarNumero(proximosFinal[1].valor, 2)} °C
               </>
             ) : null}
-            . A mediana de {formatarNumero(medianaNdj, 2)} °C e a faixa de{" "}
-            {formatarNumero(minimoNdj, 2)}–{formatarNumero(maximoNdj, 2)} °C são
+            . A mediana de {formatarNumero(medianaFinal, 2)} °C e a faixa de{" "}
+            {formatarNumero(minimoFinal, 2)}–{formatarNumero(maximoFinal, 2)} °C são
             incondicionais — misturam anos de ASO mais baixo. O RMSE do ajuste (
-            {formatarNumero(serieNdj.reta.rmse, 2)} °C) e o LOO (
-            {formatarNumero(serieNdj.reta.rmseLoo, 2)} °C) estão próximos, então a reta
-            generaliza: a margem de erro em {serieNdj.temporada} é de ~
-            {formatarNumero(serieNdj.reta.rmseLoo, 2)} °C.
+            {formatarNumero(serieFinal.reta.rmse, 2)} °C) e o LOO (
+            {formatarNumero(serieFinal.reta.rmseLoo, 2)} °C) estão próximos, então a reta
+            generaliza: a margem de erro em {serieFinal.temporada} é de ~
+            {formatarNumero(serieFinal.reta.rmseLoo, 2)} °C.
           </p>
         ) : null}
       </figcaption>

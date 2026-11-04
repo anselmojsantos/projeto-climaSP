@@ -12,6 +12,7 @@ export function PresentDf2026(row: Df2026Row): Df2026Row {
 
 export interface Temporada2026View {
 	temporada: string;
+	ano: number | null;
 	roni: number | null;
 	fase: string | null;
 	origem: string | null;
@@ -35,6 +36,7 @@ export function PresentTemporadas2026(rows: Df2026Row[]): Temporadas2026View {
 		ano: primeiro ? numero(primeiro.Ano) : null,
 		temporadas: rows.map((row) => ({
 			temporada: row.Temporada,
+			ano: numero(row.Ano),
 			roni: numero(row.NINO34_MM3),
 			fase: row.Fase,
 			origem: row.Origem,

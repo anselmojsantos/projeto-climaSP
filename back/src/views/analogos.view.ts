@@ -16,7 +16,7 @@ export const TEMPORADAS_JANELA = [
 ] as const;
 
 /** Temporadas que a projeção por regressão precisa estimar. */
-export const TEMPORADAS_FUTURO = ["SON", "OND", "NDJ"] as const;
+export const TEMPORADAS_FUTURO = ["SON", "OND", "NDJ", "DJF", "JFM"] as const;
 
 export interface AnalogoView {
 	ano: number | null;
@@ -41,6 +41,7 @@ export interface AnalogosView {
 	candidatos: CandidatosView;
 	analogos: AnalogoView[];
 	temporadasFuturo: string[];
+	anosFuturo: (number | null)[];
 	alvoFuturo: (number | null)[];
 	aso2026: number | null;
 }
@@ -71,6 +72,20 @@ function alvoFuturoDe2026(rows: Df2026Row[]): (number | null)[] {
 	);
 
 	return TEMPORADAS_FUTURO.map((temporada) => previstos.get(temporada) ?? null);
+}
+
+/**
+ * Ano de cada temporada futura. SON, OND e NDJ caem em 2026; DJF e JFM, em
+ * 2027, porque um trimestre e nomeado pelo mes central.
+ */
+function anosFuturoDe2026(rows: Df2026Row[]): (number | null)[] {
+	const anos = new Map(
+		rows
+			.filter((row) => row.Origem?.trim().toUpperCase() === "PREVISTO")
+			.map((row) => [row.Temporada.trim().toUpperCase(), numero(row.Ano)]),
+	);
+
+	return TEMPORADAS_FUTURO.map((temporada) => anos.get(temporada) ?? null);
 }
 
 /** Média dos análogos, temporada a temporada, ignorando valores ausentes. */
@@ -130,6 +145,7 @@ export function PresentAnalogos(
 		},
 		analogos,
 		temporadasFuturo: [...TEMPORADAS_FUTURO],
+		anosFuturo: anosFuturoDe2026(alvoRows),
 		alvoFuturo: alvoFuturoDe2026(alvoRows),
 		aso2026,
 	};
