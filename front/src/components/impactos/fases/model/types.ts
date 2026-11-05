@@ -2,24 +2,30 @@ export interface Props {
   baseApi: string;
 }
 
-export interface FaseChuva {
+export interface FaseResumo {
   fase: string;
   meses: number;
   anomaliaPct: number | null;
-}
-
-export interface ZonaFases {
-  zona: string;
-  fases: FaseChuva[];
+  min: number | null;
+  max: number | null;
 }
 
 export interface RespostaFases {
   de?: number | null;
   ate?: number | null;
-  zonas?: ZonaFases[];
+  primeiroMes?: string | null;
+  ultimoMes?: string | null;
+  mesesPorZona?: number | null;
+  fases?: FaseResumo[];
 }
 
 export type EstadoFases =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
-  | { fase: "ok"; de: number | null; ate: number | null; zonas: ZonaFases[] };
+  | {
+      fase: "ok";
+      primeiroMes: string | null;
+      ultimoMes: string | null;
+      mesesPorZona: number | null;
+      fases: FaseResumo[];
+    };

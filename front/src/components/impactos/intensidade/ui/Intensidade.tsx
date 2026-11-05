@@ -1,25 +1,52 @@
 import { useEffect, useState } from "react";
-import GraficoIntensidade from "./grafico/GraficoIntensidade";
-import { formatarDecimal } from "../../lib/formato";
+import {
+  formatarComSinal,
+  formatarDecimal,
+} from "../../lib/formato";
 import type {
   EstadoIntensidade,
+  MetricaIntensidade,
   Props,
   RespostaIntensidade,
-  ZonaIntensidade,
 } from "../model/types";
 
-function fatorDeDias(zona: ZonaIntensidade): { fator: number | null; p: number | null } {
-  const metrica = zona.metricas.find((item) => item.chave === "dias_ge_25");
-  return { fator: metrica?.fator ?? null, p: metrica?.p ?? null };
+function valoresDe(metricas: MetricaIntensidade[], chave: string): number[] {
+  return metricas
+    .filter((metrica) => metrica.chave === chave)
+    .map((metrica) => metrica.pct)
+    .filter((valor): valor is number => valor !== null);
 }
 
-function faixaDeDias(zonas: ZonaIntensidade[]): string {
-  const valores = zonas
-    .map((zona) => fatorDeDias(zona).fator)
-    .filter((valor): valor is number => valor !== null)
-    .map((fator) => (fator - 1) * 100);
-  if (valores.length === 0) return "—";
-  return `${formatarDecimal(Math.min(...valores), 0)}% a ${formatarDecimal(Math.max(...valores), 0)}%`;
+function media(valores: number[]): number | null {
+  if (valores.length === 0) return null;
+  return valores.reduce((soma, valor) => soma + valor, 0) / valores.length;
+}
+
+function faixa(valores: number[]): [number, number] | null {
+  if (valores.length === 0) return null;
+  return [Math.min(...valores), Math.max(...valores)];
+}
+
+function Cartao({
+  titulo,
+  valor,
+  detalhe,
+}: {
+  titulo: string;
+  valor: string;
+  detalhe: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-data-neutral/20 p-4">
+      <p className="m-0 text-[12px] text-ink-secondary">{titulo}</p>
+      <p className="mt-1 mb-0 font-data text-[27px] leading-none text-deep">
+        {valor}
+      </p>
+      <p className="mt-1 mb-0 text-[13px] leading-[1.4] text-ink-secondary">
+        {detalhe}
+      </p>
+    </div>
+  );
 }
 
 export default function Intensidade({ baseApi }: Props) {
@@ -51,23 +78,83 @@ export default function Intensidade({ baseApi }: Props) {
     };
   }, [baseApi]);
 
+  const metricas =
+    estado.fase === "ok" ? estado.zonas.flatMap((zona) => zona.metricas) : [];
+
+  const chuvaMedia = media(valoresDe(metricas, "chuva_mm"));
+  const chuvaFaixa = faixa(valoresDe(metricas, "chuva_mm"));
+  const diaMedia = media(valoresDe(metricas, "max_dia_mm"));
+  const diaFaixa = faixa(valoresDe(metricas, "max_dia_mm"));
+
+  const fatores = metricas
+    .filter((metrica) => metrica.chave === "dias_ge_25")
+    .map((metrica) => metrica.fator)
+    .filter((valor): valor is number => valor !== null);
+  const fatorMin = fatores.length > 0 ? Math.min(...fatores) : null;
+  const fatorMax = fatores.length > 0 ? Math.max(...fatores) : null;
+  const diasMin =
+    fatorMin === null ? null : Math.round((fatorMin - 1) * 100);
+  const diasMax =
+    fatorMax === null ? null : Math.round((fatorMax - 1) * 100);
+
+  const pValores = metricas
+    .filter((metrica) => metrica.chave === "dias_ge_25")
+    .map((metrica) => metrica.p)
+    .filter((valor): valor is number => valor !== null);
+  const zonasFirmes = pValores.filter((valor) => valor < 0.05).length;
+
+  const valorChuva =
+    chuvaMedia === null ? "—" : `${formatarComSinal(chuvaMedia, 0)}%`;
+  const detalheChuva =
+    chuvaFaixa === null
+      ? "por °C"
+      : `de ${formatarComSinal(chuvaFaixa[0], 0)}% a ${formatarComSinal(chuvaFaixa[1], 0)}% por °C`;
+
+  const valorDia =
+    diaMedia === null ? "—" : `${formatarComSinal(diaMedia, 0)}%`;
+  const detalheDia =
+    diaFaixa === null
+      ? "por °C"
+      : `de ${formatarComSinal(diaFaixa[0], 0)}% a ${formatarComSinal(diaFaixa[1], 0)}% por °C`;
+
+  const valorDias =
+    diasMin === null || diasMax === null
+      ? "—"
+      : `${formatarComSinal(diasMin, 0)}% a ${formatarComSinal(diasMax, 0)}%`;
+  const detalheDias =
+    fatorMin === null || fatorMax === null
+      ? "por °C"
+      : `${formatarDecimal(fatorMin, 2)} a ${formatarDecimal(fatorMax, 2)} vez por °C`;
+
   return (
-    <section aria-labelledby="impactos-intensidade">
+    <section
+      aria-labelledby="impactos-intensidade"
+      className="border-t border-data-neutral/15 pt-10"
+    >
       <p className="m-0 mb-1 text-[11px] uppercase tracking-wide text-ink-secondary">
-        2 · Intensidade
+        3 · Intensidade
       </p>
       <h2
         id="impactos-intensidade"
-        className="m-0 text-[20px] leading-[1.2] font-semibold"
+        className="m-0 text-[21px] leading-[1.2] font-semibold"
       >
-        A chuva forte cresce mais que o volume
+        Chove mais forte também
       </h2>
-      <p className="mt-1.5 mb-0 text-[15px] leading-[1.4] text-ink-secondary">
-        Para cada 1 °C de aquecimento do Pacífico, a chuva do mês cresce de 4% a
-        6%. O maior dia do mês cresce mais: de 5% a 9%. É a diferença entre
-        chover mais vezes fraco e chover tudo de uma vez — e é a segunda que
-        alaga.
-      </p>
+
+      <div className="mt-2 flex max-w-[820px] flex-col gap-2 text-[15px] leading-[1.5] text-ink-secondary">
+        <p className="m-0">
+          Chuva em excesso não é só volume. O mesmo total pode cair em 30 dias
+          de garoa ou em duas tempestades. Para ver a diferença, medimos três
+          coisas: o total do mês, o dia mais chuvoso e quantos dias tiveram 25
+          mm ou mais. Chamamos esses dias de chuva forte.
+        </p>
+        <p className="m-0">
+          A conta é uma regressão simples. Para cada zona, comparamos a chuva de
+          cada mês com a temperatura do Pacífico naquele mês, sempre dentro do
+          mesmo mês do ano (janeiro com janeiro, fevereiro com fevereiro...).
+          Assim, o efeito do Niño não se confunde com a época do ano.
+        </p>
+      </div>
 
       {estado.fase === "carregando" && (
         <p className="mt-5 mb-0 text-[14px] text-ink-secondary">
@@ -82,59 +169,41 @@ export default function Intensidade({ baseApi }: Props) {
       )}
 
       {estado.fase === "ok" && (
-        <div className="mt-5 flex flex-col gap-5">
-          <GraficoIntensidade zonas={estado.zonas} />
-
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-[14px]">
-              <caption className="mb-1 text-left text-[13px] text-ink-secondary">
-                Dias com chuva acima de 25 mm: quantas vezes o número de dias
-                cresce por 1 °C.
-              </caption>
-              <thead>
-                <tr className="text-ink-secondary">
-                  <th scope="col" className="border-b border-data-neutral/30 py-1 pr-3 font-semibold">
-                    Zona
-                  </th>
-                  <th scope="col" className="border-b border-data-neutral/30 py-1 pr-3 font-semibold">
-                    Vezes por °C
-                  </th>
-                  <th scope="col" className="border-b border-data-neutral/30 py-1 font-semibold">
-                    Confiança (p)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {estado.zonas.map((zona) => {
-                  const { fator, p } = fatorDeDias(zona);
-                  return (
-                    <tr key={zona.zona}>
-                      <th
-                        scope="row"
-                        className="border-b border-data-neutral/15 py-1 pr-3 text-left font-normal text-ink-secondary"
-                      >
-                        {zona.zona}
-                      </th>
-                      <td className="border-b border-data-neutral/15 py-1 pr-3 font-data whitespace-nowrap">
-                        {fator === null ? "—" : `${formatarDecimal(fator, 2)}×`}
-                      </td>
-                      <td className="border-b border-data-neutral/15 py-1 font-data whitespace-nowrap">
-                        {p === null ? "—" : formatarDecimal(p, 3)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="mt-5 flex flex-col gap-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Cartao
+              titulo="Chuva do mês"
+              valor={valorChuva}
+              detalhe={detalheChuva}
+            />
+            <Cartao
+              titulo="Dia mais chuvoso"
+              valor={valorDia}
+              detalhe={detalheDia}
+            />
+            <Cartao
+              titulo="Dias com 25 mm ou mais"
+              valor={valorDias}
+              detalhe={detalheDias}
+            />
           </div>
 
-          <p className="m-0 text-[13px] leading-[1.4] text-data-neutral">
-            Leitura: em meses de El Niño, a chance de um dia de chuva forte
-            (&gt;25 mm) aumenta de{" "}
-            {faixaDeDias(estado.fase === "ok" ? estado.zonas : [])} por grau. O p
-            abaixo de 0,05 indica efeito que a amostra sustenta; acima disso, o
-            número existe mas ainda pode ser acaso.
-          </p>
+          <div className="flex max-w-[820px] flex-col gap-2 text-[13px] leading-[1.45] text-ink-secondary">
+            <p className="m-0">
+              O efeito é pequeno e tem incerteza. Para o total, o intervalo de
+              95% vai de +1,0 a +10,7 mm por °C. Para os dias de chuva forte, o
+              resultado é mais firme em{" "}
+              {zonasFirmes === 0
+                ? "nenhuma zona"
+                : `${zonasFirmes} das 5 zonas`}{" "}
+              (p abaixo de 0,05) e mais fraco nas outras. O p é a chance de o
+              resultado ser acaso; abaixo de 0,05, é pouco provável.
+            </p>
+            <p className="m-0">
+              Não é machine learning: é uma conta de regressão sobre a chuva que
+              foi medida.
+            </p>
+          </div>
         </div>
       )}
     </section>

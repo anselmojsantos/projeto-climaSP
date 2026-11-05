@@ -2,18 +2,18 @@ export interface Props {
   baseApi: string;
 }
 
-export interface MesCenario {
+export interface MesProjecao {
   mes: string;
   rotulo: string;
-  nino34Projetado: number | null;
+  nino34: number;
 }
 
-export interface ZonaCenario {
+export interface ZonaProjecao {
   zona: string;
   mes: string;
   mesNum: number;
   ano: number;
-  nino34Projetado: number | null;
+  nino34: number;
   chuvaNormalMm: number | null;
   chuvaEsperadaMm: number | null;
   desvioMm: number | null;
@@ -22,12 +22,12 @@ export interface ZonaCenario {
   maiorDiaEsperadoMm: number | null;
 }
 
-export interface RespostaCenario {
-  meses?: MesCenario[];
-  zonas?: ZonaCenario[];
+export interface RespostaProjecao {
+  meses?: MesProjecao[];
+  zonas?: ZonaProjecao[];
 }
 
-export type EstadoCenario =
+export type EstadoProjecao =
   | { fase: "carregando" }
   | { fase: "erro"; mensagem: string }
-  | { fase: "ok"; meses: MesCenario[]; zonas: ZonaCenario[] };
+  | { fase: "ok"; meses: MesProjecao[]; zonas: ZonaProjecao[] };

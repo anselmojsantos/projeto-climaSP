@@ -5,6 +5,9 @@ import {
 	FindChuvaConcentracao,
 	FindChuvaIntensidade,
 	FindChuvaPorFase,
+	FindChuvaSerie,
+	FindClimaChuva,
+	FindNinoProjetado,
 } from "../models/chuvas.model.js";
 import {
 	PresentCaso2026,
@@ -12,6 +15,8 @@ import {
 	PresentConcentracao,
 	PresentFasesChuva,
 	PresentIntensidade,
+	PresentProjecao,
+	PresentSerie,
 } from "../views/chuvas.view.js";
 
 export async function GetChuvasFases(
@@ -27,6 +32,44 @@ export async function GetChuvasFases(
 	} catch (error) {
 		request.log.error({ error }, "Falha ao consultar a chuva por fase do ENSO");
 		return reply.code(500).send({ message: "Falha ao buscar a chuva por fase." });
+	}
+}
+
+export async function GetChuvasSerie(
+	request: FastifyRequest,
+	reply: FastifyReply,
+) {
+	try {
+		const rows = await FindChuvaSerie();
+		if (rows.length === 0) {
+			return reply.code(404).send({ message: "Série de chuva indisponível." });
+		}
+		return reply.send(PresentSerie(rows));
+	} catch (error) {
+		request.log.error({ error }, "Falha ao consultar a série de chuva");
+		return reply.code(500).send({ message: "Falha ao buscar a série de chuva." });
+	}
+}
+
+export async function GetChuvasProjecao(
+	request: FastifyRequest,
+	reply: FastifyReply,
+) {
+	try {
+		const [nino, clima, coeficientes] = await Promise.all([
+			FindNinoProjetado(),
+			FindClimaChuva(),
+			FindChuvaIntensidade(),
+		]);
+		if (nino.length === 0 || clima.length === 0 || coeficientes.length === 0) {
+			return reply.code(404).send({ message: "Projeção indisponível." });
+		}
+		return reply.send(PresentProjecao(nino, clima, coeficientes));
+	} catch (error) {
+		request.log.error({ error }, "Falha ao montar a projeção de chuva");
+		return reply
+			.code(500)
+			.send({ message: "Falha ao buscar a projeção de chuva." });
 	}
 }
 

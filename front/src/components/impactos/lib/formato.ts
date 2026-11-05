@@ -58,3 +58,33 @@ export const MESES_CURTOS = [
 export function rotuloMes(mesNum: number): string {
   return MESES_CURTOS[mesNum - 1] ?? "";
 }
+
+export const MESES_LONGOS = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+] as const;
+
+/** "1961-01" → "janeiro de 1961". */
+export function rotuloMesLongo(mes: string): string {
+  const [ano = "", mesTexto = ""] = mes.split("-");
+  const mesNum = Number.parseInt(mesTexto, 10);
+  const nome = MESES_LONGOS[mesNum - 1];
+  return nome ? `${nome} de ${ano}` : mes;
+}
+
+/** "1961-01" → "jan/1961". */
+export function rotuloMesAno(mes: string): string {
+  const [ano = "", mesTexto = ""] = mes.split("-");
+  const mesNum = Number.parseInt(mesTexto, 10);
+  return `${rotuloMes(mesNum)}/${ano}`;
+}
