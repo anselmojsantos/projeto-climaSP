@@ -24,6 +24,7 @@ export default function Validacao2026({ baseApi }: Props) {
           fase: "ok",
           temporadas: dados.temporadas ?? [],
           temporadasFuturo: dados.temporadasFuturo ?? [],
+          anosFuturo: dados.anosFuturo ?? [],
           alvoFuturo: dados.alvoFuturo ?? [],
           aso2026: dados.aso2026 ?? null,
           analogos: dados.analogos ?? [],

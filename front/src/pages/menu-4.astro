@@ -1,8 +1,12 @@
 ---
 import Base from "../layouts/Base.astro";
+import Impactos from "../components/impactos";
 import { SECOES } from "../types/secoes";
 
 const titulo = SECOES.find((secao) => secao.slug === "menu-4")!.titulo;
+const baseApi = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3333";
 ---
 
-<Base titulo={titulo} />
+<Base titulo={titulo}>
+  <Impactos client:load baseApi={baseApi} />
+</Base>

@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import AnomaliasRoutes from "./anomalias.routes.js";
+import ChuvasRoutes from "./chuvas.routes.js";
 import Df2026Routes from "./df2026.routes.js";
 import EnsoRoutes from "./enso.routes.js";
 import CemadenRoutes from "./cemaden.routes.js";
@@ -14,6 +15,7 @@ const routes: FastifyPluginAsync = async (app) => {
 	await app.register(Df2026Routes, { prefix: "/enso" });
 	await app.register(EnsoRoutes, { prefix: "/enso" });
 	await app.register(AnomaliasRoutes, { prefix: "/anomalias" });
+	await app.register(ChuvasRoutes, { prefix: "/chuvas" });
 	await app.register(CemadenRoutes, { prefix: "/cemaden" });
 	await app.register(OcorrenciasRoutes, { prefix: "/ocorrencias" });
 };
